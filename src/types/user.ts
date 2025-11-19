@@ -1,6 +1,11 @@
 export interface GoogleUser {
     googleId: string;
     email: string;
-    name: string;
-    picture: string;
+    isRegistered: boolean;
+}
+
+export interface UserProfile {
+    email: string;
+    firstName: string;
+    lastName: string;
 }

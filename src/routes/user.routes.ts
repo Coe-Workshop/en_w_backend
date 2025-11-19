@@ -4,7 +4,7 @@ const router = Router();
 
 router.get('/', (req: Request, res: Response) => {
     if (!req.isAuthenticated()) {
-        return res.status(401).json({
+        return res.json({
             success: false,
             authenticated: false,
             user: null,
@@ -14,7 +14,10 @@ router.get('/', (req: Request, res: Response) => {
     res.json({
         success: true,
         authenticated: true,
-        user: req.user,
+        user: {
+            email: req.user!.email,
+            isRegistered: req.user!.isRegistered,
+        },
     });
 });
 

@@ -39,6 +39,7 @@ npm run dev
 \`\`\`
 src/
 ├── config/          # Configuration files
+├── db/              # User Database
 ├── routes/          # API routes
 ├── types/           # TypeScript types
 └── server.ts        # Entry point

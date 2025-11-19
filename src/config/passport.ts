@@ -2,6 +2,7 @@ import 'dotenv/config';
 import passport from "passport";
 import {GoogleUser} from "../types/user";
 import { Strategy as GoogleStrategy, Profile, VerifyCallback } from 'passport-google-oauth20';
+import {userDB} from "../db/users";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
@@ -15,28 +16,41 @@ passport.use(
             callbackURL: GOOGLE_CALLBACK_URL,
         },
         (accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) => {
+            const email = profile.emails?.[0].value || '';
+            const isRegistered = userDB.exists(email);
             const user: GoogleUser = {
                 googleId: profile.id,
-                email: profile.emails?.[0]?.value || '',
-                name: profile.displayName,
-                picture: profile.photos?.[0]?.value || '',
+                email: email,
+                isRegistered: isRegistered,
             };
 
-            console.log('User logged in:', user.email);
+            console.log(`User logged in: ${email} (Registered: ${isRegistered})`);
             return done(null, user);
         }
     )
 );
 
-passport.serializeUser((user, done) => {
+// เก็บข้อมูล
+passport.serializeUser((user:Express.User, done) => {
     const googleUser = user as GoogleUser;
-    done(null, googleUser.googleId);
+    done(null, {
+        googleId: googleUser.googleId,
+        email: googleUser.email,
+        isRegistered: googleUser.isRegistered,
+    });
 });
 
-passport.deserializeUser((id: string, done) => {
-    // ต้อง query จาก database
-    // ตอนนี้ส่งแค่ id กลับไป (แก้ทีหลัง)
-    done(null, { googleId: id } as GoogleUser);
+// ส่งข้อมูล
+passport.deserializeUser((sessionUser: any, done) => {
+    const isRegistered = userDB.exists(sessionUser.email);
+
+    const user: GoogleUser = {
+        googleId: sessionUser.googleId,
+        email: sessionUser.email,
+        isRegistered: isRegistered,
+    };
+
+    done(null, user);
 });
 
 export default passport;
