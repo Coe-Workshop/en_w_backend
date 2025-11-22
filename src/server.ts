@@ -1,10 +1,11 @@
 import dotenv from "dotenv";
-import express, {Request,Response} from "express";
-import cors from 'cors';
+import express, { Request, Response } from "express";
+import cors from "cors";
 import session from "express-session";
 import passport from "./config/passport";
 import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/user.routes";
+import toolRoutes from "./routes/tool.routes";
 
 dotenv.config();
 
@@ -12,49 +13,51 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 app.use(
-    cors({
-        origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-        credentials: true,
-    })
+  cors({
+    origin: process.env.FRONTEND_URL || "http://localhost:3000",
+    credentials: true,
+  }),
 );
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(
-    session({
-        secret: process.env.SESSION_SECRET || 'fallback-secret',
-        resave: false,
-        saveUninitialized: false,
-        cookie: {
-            secure: false,
-            httpOnly: true,
-            maxAge: 24 * 60 * 60 * 1000, // 24 ชม.
-            sameSite: 'lax',
-        },
-    })
+  session({
+    secret: process.env.SESSION_SECRET || "fallback-secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false,
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 24 ชม.
+      sameSite: "lax",
+    },
+  }),
 );
 
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use('/api/auth', authRoutes);
+app.use("/api/auth", authRoutes);
 
-app.use('/api/user', userRoutes);
+app.use("/api/user", userRoutes);
+
+app.use("/api/tool", toolRoutes);
 
 // เอาออกก็ได้
-app.get('/', (req: Request, res: Response) => {
-    res.json({
-        success: true,
-        message: 'EN.W Backend API',
-        endpoints: {
-            login: '/api/auth/google',
-            user: '/api/user',
-            logout: '/api/auth/logout',
-        },
-    });
+app.get("/", (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    message: "EN.W Backend API",
+    endpoints: {
+      login: "/api/auth/google",
+      user: "/api/user",
+      logout: "/api/auth/logout",
+    },
+  });
 });
 
 app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`);
-})
+  console.log(`Example app listening on port ${port}`);
+});
