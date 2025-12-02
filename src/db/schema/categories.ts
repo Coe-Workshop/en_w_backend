@@ -3,10 +3,10 @@ import { relations } from "drizzle-orm";
 import { itemsToCategories } from "./itemsToCategories";
 
 export const itemCategory = pgEnum("item_category", [
-  "machine",
-  "measurement",
-  "electronic",
-  "other",
+  "MACHINE",
+  "MEASUREMENT",
+  "ELECTRONIC",
+  "OTHER",
 ]);
 
 export const categories = pgTable("categories", {

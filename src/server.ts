@@ -5,12 +5,11 @@ import session from "express-session";
 import passport from "./config/passport";
 import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/user.routes";
-import sampleRoutes from "./routes/sample.routes";
 
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 5000;
+const port = process.env.PORT || 8080;
 
 app.use(
   cors({
@@ -42,22 +41,6 @@ app.use(passport.session());
 app.use("/api/auth", authRoutes);
 
 app.use("/api/user", userRoutes);
-
-app.use("/api/sample/user", sampleRoutes);
-app.use("/api/sample/items", sampleRoutes);
-
-// เอาออกก็ได้
-app.get("/", (req: Request, res: Response) => {
-  res.json({
-    success: true,
-    message: "EN.W Backend API",
-    endpoints: {
-      login: "/api/auth/google",
-      user: "/api/user",
-      logout: "/api/auth/logout",
-    },
-  });
-});
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);

@@ -5,22 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1764168511615,
-      "tag": "0000_wet_loki",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1764174812618,
-      "tag": "0001_sudden_cobalt_man",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1764484734201,
-      "tag": "0002_chunky_roland_deschain",
+      "when": 1764681431006,
+      "tag": "0000_cool_marten_broadcloak",
       "breakpoints": true
     }
   ]
