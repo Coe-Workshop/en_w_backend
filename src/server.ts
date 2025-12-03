@@ -42,10 +42,6 @@ app.use("/api/auth", authRoutes);
 
 app.use("/api/user", userRoutes);
 
-app.use("/", (req: Request, res: Response, next: NextFunction): void => {
-  res.json({ message: "Allo! Catch-all route." });
-});
-
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
