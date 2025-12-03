@@ -5,6 +5,7 @@ import session from "express-session";
 import passport from "./config/passport";
 import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/user.routes";
+import itemRoutes from "./routes/item.routes";
 
 dotenv.config();
 
@@ -49,3 +50,5 @@ app.use("/", (req: Request, res: Response, next: NextFunction): void => {
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
 });
+
+export default app;
