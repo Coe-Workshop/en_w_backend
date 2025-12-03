@@ -30,7 +30,6 @@ describe("items", () => {
         .get(`api/v1/items/${itemId}`)
         .expect("Content-Type", /json/)
         .expect(200);
-      // expect(response.body).toMatchObject()
     });
   });
   describe("delete item", () => {});
