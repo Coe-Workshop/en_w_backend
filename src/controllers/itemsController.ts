@@ -11,13 +11,20 @@ export const createItem = async (
 ): Promise<Response> => {
   try {
     const validatedData: CreateItem = CreateItem.parse(req.body);
+    // if user send empty string. make it fall to db default
+    if (validatedData.description === "") {
+      validatedData.description = undefined;
+    }
     const result = await db.insert(items).values(validatedData).returning();
     return res.status(201).json({
       success: true,
       data: result[0],
     });
   } catch (error) {
-    // using custom zod error message
+    /* 
+     * using custom zod error message
+     on "../zSchemas/item"
+     */
     if (error instanceof z.ZodError) {
       return res.status(400).json({
         error: error.issues[0].message,
@@ -54,6 +61,10 @@ export const deleteItem = async (
       data: result[0],
     });
   } catch (error) {
+    /* 
+     * using custom zod error message
+     on "../zSchemas/item"
+     */
     if (error instanceof z.ZodError) {
       return res.status(400).json({
         error: error.issues[0].message,
