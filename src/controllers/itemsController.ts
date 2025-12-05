@@ -56,7 +56,7 @@ export const deleteItem = async (
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({
-        error: error.issues,
+        error: error.issues[0].message,
       });
     }
     const err = error as Error;
