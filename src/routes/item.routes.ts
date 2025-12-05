@@ -1,8 +1,9 @@
 import { Router } from "express";
-import { getAllItems } from "../controllers/itemsController";
+import { createItem, deleteItem } from "../controllers/itemsController";
 const router = Router();
 
-router.get("/", getAllItems);
-// router.post("/item");
+// router.get("/", getAllItems);
+router.post("/", createItem);
+router.delete("/:id", deleteItem);
 
 export default router;

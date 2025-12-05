@@ -11,7 +11,7 @@ export const itemCategory = pgEnum("item_category", [
 
 export const categories = pgTable("categories", {
   id: serial("id").primaryKey(),
-  name: itemCategory("name").notNull(),
+  name: itemCategory("name").notNull().unique(),
 });
 
 //one category can be in many item

@@ -43,6 +43,7 @@ app.use("/api/auth", authRoutes);
 
 app.use("/api/user", userRoutes);
 
+// app.use("/api/v1/categories", categoiresRoutes);
 app.use("/api/v1/items", itemRoutes);
 
 app.listen(port, () => {

@@ -16,9 +16,10 @@
         "passport": "0.7.0",
         "passport-google-oauth20": "2.0.0",
         "pg": "8.16.3",
-        "zod": "4.1.13",
+        "zod": "^4.1.13",
       },
       "devDependencies": {
+        "@jest/globals": "^30.2.0",
         "@types/cookie-parser": "1.4.10",
         "@types/cors": "2.8.19",
         "@types/express": "5.0.5",
