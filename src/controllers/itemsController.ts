@@ -1,9 +1,35 @@
 import { Request, Response } from "express";
 import db from "../db";
-import { items } from "../db/schema";
+import { items, itemsToCategories } from "../db/schema";
 import { CreateItem, DeleteItem } from "../zSchemas/item";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
+
+const formatHelper = async (itemId: number) => {
+  const withCategories = await db.query.items.findFirst({
+    where: eq(items.id, itemId),
+    with: {
+      categories: {
+        columns: {},
+        with: {
+          category: {
+            columns: {
+              name: true,
+            },
+          },
+        },
+      },
+    },
+  });
+
+  const formatResult = {
+    ...withCategories,
+    categories: withCategories?.categories.map((g) => ({
+      name: g.category.name,
+    })),
+  };
+  return formatResult;
+};
 
 export const createItem = async (
   req: Request,
@@ -15,10 +41,33 @@ export const createItem = async (
     if (validatedData.description === "") {
       validatedData.description = undefined;
     }
-    const result = await db.insert(items).values(validatedData).returning();
+
+    // first insert item in to it table
+    const insertItem = await db.insert(items).values(validatedData).returning();
+
+    // get item id
+    const itemId = insertItem[0].id;
+
+    /* 
+        create item with many category 
+        like (item_id, category_id)
+    */
+    const itemWithCategories = [];
+    for (let i = 0; i < validatedData.category_ids.length; i++) {
+      itemWithCategories.push({
+        item_id: itemId,
+        category_id: validatedData.category_ids[i],
+      });
+    }
+
+    // insert into junction table between item and category
+    await db.insert(itemsToCategories).values(itemWithCategories);
+
+    const resultWithFormat = await formatHelper(itemId);
+
     return res.status(201).json({
       success: true,
-      data: result[0],
+      data: resultWithFormat,
     });
   } catch (error) {
     /* 
@@ -52,13 +101,14 @@ export const deleteItem = async (
         message: "ไม่พบอุปกรณ์ที่ระบุ",
       });
     }
-    const result = await db
-      .delete(items)
-      .where(eq(items.id, validatedId))
-      .returning();
+
+    const resultWithFormat = await formatHelper(validatedId);
+
+    // item in junction table will be delete too
+    await db.delete(items).where(eq(items.id, validatedId)).returning();
     return res.status(200).json({
       success: true,
-      data: result[0],
+      data: resultWithFormat,
     });
   } catch (error) {
     /* 

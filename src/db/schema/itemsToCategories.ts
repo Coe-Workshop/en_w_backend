@@ -8,10 +8,10 @@ export const itemsToCategories = pgTable(
   {
     item_id: integer("item_id")
       .notNull()
-      .references(() => items.id),
+      .references(() => items.id, { onDelete: "cascade" }),
     category_id: integer("category_id")
       .notNull()
-      .references(() => categories.id),
+      .references(() => categories.id, { onDelete: "cascade" }),
   },
   (table) => ({
     pk: primaryKey({ columns: [table.item_id, table.category_id] }),
