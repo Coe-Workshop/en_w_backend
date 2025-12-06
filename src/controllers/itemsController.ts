@@ -1,11 +1,14 @@
 import { Request, Response } from "express";
 import db from "../db";
-import { items, itemsToCategories } from "../db/schema";
+import { assets, items, itemsToCategories } from "../db/schema";
 import { CreateItem, DeleteItem } from "../zSchemas/item";
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 
 const formatHelper = async (itemId: number) => {
+  const withAssetId = await db.query.assets.findFirst({
+    where: eq(assets.item_id, itemId),
+  });
   const withCategories = await db.query.items.findFirst({
     where: eq(items.id, itemId),
     with: {
@@ -23,6 +26,8 @@ const formatHelper = async (itemId: number) => {
   });
 
   const formatResult = {
+    // if exist it will show
+    ...withAssetId,
     ...withCategories,
     categories: withCategories?.categories.map((g) => ({
       name: g.category.name,

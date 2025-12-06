@@ -1,5 +1,4 @@
-import z, { infer, trim } from "zod";
-import { categories } from "../db/schema";
+import z from "zod";
 
 // export const Item = z.object({
 //   id: z.number(),
@@ -19,14 +18,19 @@ export const CreateItem = z.object({
     .array(
       z
         .number("ID หมวดหมู่ต้องเป็นตัวเลข")
-        .int()
-        .positive("ID หมวดหมู่ต้องเป็นจำนนวนเต็มบวก"),
+        .max(2147483647, "ไม่พบหมวดหมู่ดังกล่าว")
+        .int("ID ต้องเป็นจำนนวนเต็ม")
+        .positive("ID ห้ามติดลบ"),
     )
     .min(1, "ต้องเลือกอย่างน้อย 1 หมวดหมู่"),
   image_url: z.string().trim().optional(),
 });
 
-export const DeleteItem = z.coerce.number({ message: "ไอดีต้องเป็นตัวเลข" });
+export const DeleteItem = z.coerce
+  .number({ message: "ไอดีต้องเป็นตัวเลข" })
+  .min(1, "ไอดีต้องมากกว่า 0")
+  .max(2147483647, "ไม่พบอุปกรณ์ดังกล่าว")
+  .int("ไอดีต้องเป็นจำนวนเต็ม");
 
 export type CreateItem = z.infer<typeof CreateItem>;
 export type DeleteItem = z.infer<typeof DeleteItem>;
