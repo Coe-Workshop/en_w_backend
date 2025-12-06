@@ -2,17 +2,18 @@ import { Request, Response } from "express";
 import db from "../db";
 import { assets, categories, items, itemsToCategories } from "../db/schema";
 import { z } from "zod";
-import { CreateAsset } from "../zSchemas/asset";
+import { CreateAssetRequest } from "../zSchemas/asset";
 import { eq, sql } from "drizzle-orm";
+import HttpStatus from "http-status";
 
-const get_item_categories_asset = async (itemId: number) => {
+const getItemCategoriesAsset = async (itemId: number) => {
   const resultWithFormat = await db
     .select({
       item_id: items.id,
       asset_id: assets.assets_id,
-      item_name: items.name,
-      item_description: items.description,
-      item_image_url: items.image_url,
+      name: items.name,
+      description: items.description,
+      image_url: items.image_url,
       categories: sql`jsonb_agg(categories.name)`,
     })
     .from(items)
@@ -29,7 +30,9 @@ export const createAsset = async (
   res: Response,
 ): Promise<Response> => {
   try {
-    const validatedData: CreateAsset = CreateAsset.parse(req.body);
+    const validatedData: CreateAssetRequest = CreateAssetRequest.parse(
+      req.body,
+    );
 
     const itemId = validatedData.item_id;
     const isExist = await db
@@ -37,7 +40,7 @@ export const createAsset = async (
       .from(items)
       .where(eq(items.id, itemId));
     if (isExist.length === 0) {
-      res.status(404).json({
+      res.status(HttpStatus.NOT_FOUND).json({
         success: false,
         message: "ไม่พบอุปกรณ์ที่ระบุ",
       });
@@ -45,18 +48,11 @@ export const createAsset = async (
 
     await db.insert(assets).values(validatedData);
 
-    // const getItem = await db.query.items.findFirst({
-    //   where: eq(items.id, itemId),
-    // });
-    // const formatResult = {
-    //   ...getItem,
-    //   asset: validatedData.assets_id,
-    // };
-    const ans = await get_item_categories_asset(itemId);
+    const ans = await getItemCategoriesAsset(itemId);
 
-    return res.status(201).json({
+    return res.status(HttpStatus.CREATED).json({
       success: true,
-      data: ans,
+      data: ans[0],
     });
   } catch (error) {
     /*
@@ -64,11 +60,13 @@ export const createAsset = async (
      on "../zSchemas/item"
      */
     if (error instanceof z.ZodError) {
-      return res.status(400).json({
+      return res.status(HttpStatus.BAD_REQUEST).json({
         error: error.issues[0].message,
       });
     }
     const err = error as Error;
-    return res.status(500).json({ error: err.message });
+    return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({ error: err.message });
   }
 };

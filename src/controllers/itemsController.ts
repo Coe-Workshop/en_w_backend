@@ -1,19 +1,20 @@
 import { Request, Response } from "express";
 import db from "../db";
 import { assets, categories, items, itemsToCategories } from "../db/schema";
-import { CreateItem, DeleteItem } from "../zSchemas/item";
+import { CreateItemRequest, DeleteItemRequest } from "../zSchemas/item";
 import { z } from "zod";
 import { eq, sql } from "drizzle-orm";
+import HttpStatus from "http-status";
 
 // Damnnnnnnn This might be peak
-const get_item_categories_asset = async (itemId: number) => {
+const getItemCategoriesAsset = async (itemId: number) => {
   const resultWithFormat = await db
     .select({
       item_id: items.id,
       asset_id: assets.assets_id,
-      item_name: items.name,
-      item_description: items.description,
-      item_image_url: items.image_url,
+      name: items.name,
+      description: items.description,
+      image_url: items.image_url,
       categories: sql`jsonb_agg(categories.name)`,
     })
     .from(items)
@@ -30,7 +31,7 @@ export const createItem = async (
   res: Response,
 ): Promise<Response> => {
   try {
-    const validatedData: CreateItem = CreateItem.parse(req.body);
+    const validatedData: CreateItemRequest = CreateItemRequest.parse(req.body);
     // if user send empty string. make it fall to db default
     if (validatedData.description === "") {
       validatedData.description = undefined;
@@ -46,22 +47,19 @@ export const createItem = async (
         create item with many category 
         like (item_id, category_id)
     */
-    const itemWithCategories = [];
-    for (let i = 0; i < validatedData.category_ids.length; i++) {
-      itemWithCategories.push({
-        item_id: itemId,
-        category_id: validatedData.category_ids[i],
-      });
-    }
+    const itemWithCategories = validatedData.category_ids.map((id) => ({
+      item_id: itemId,
+      category_id: id,
+    }));
 
     // insert into junction table between item and category
     await db.insert(itemsToCategories).values(itemWithCategories);
 
-    const ans = await get_item_categories_asset(itemId);
+    const ans = await getItemCategoriesAsset(itemId);
 
-    return res.status(201).json({
+    return res.status(HttpStatus.CREATED).json({
       success: true,
-      data: ans,
+      data: ans[0],
     });
   } catch (error) {
     /* 
@@ -69,12 +67,14 @@ export const createItem = async (
      on "../zSchemas/item"
      */
     if (error instanceof z.ZodError) {
-      return res.status(400).json({
+      return res.status(HttpStatus.BAD_REQUEST).json({
         error: error.issues[0].message,
       });
     }
     const err = error as Error;
-    return res.status(500).json({ error: err.message });
+    return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({ error: err.message });
   }
 };
 
@@ -84,25 +84,25 @@ export const deleteItem = async (
 ): Promise<Response> => {
   try {
     let id = req.params.id;
-    const validatedId: DeleteItem = DeleteItem.parse(id);
+    const validatedId: DeleteItemRequest = DeleteItemRequest.parse(id);
     const isExist = await db
       .select({ id: items.id })
       .from(items)
       .where(eq(items.id, validatedId));
     if (isExist.length === 0) {
-      res.status(404).json({
+      res.status(HttpStatus.NOT_FOUND).json({
         success: false,
         message: "ไม่พบอุปกรณ์ที่ระบุ",
       });
     }
 
-    const ans = await get_item_categories_asset(validatedId);
+    const ans = await getItemCategoriesAsset(validatedId);
 
     // item in junction table will be delete too
     await db.delete(items).where(eq(items.id, validatedId)).returning();
-    return res.status(200).json({
+    return res.status(HttpStatus.OK).json({
       success: true,
-      data: ans,
+      data: ans[0],
     });
   } catch (error) {
     /* 
@@ -110,11 +110,13 @@ export const deleteItem = async (
      on "../zSchemas/item"
      */
     if (error instanceof z.ZodError) {
-      return res.status(400).json({
+      return res.status(HttpStatus.BAD_REQUEST).json({
         error: error.issues[0].message,
       });
     }
     const err = error as Error;
-    return res.status(500).json({ error: err.message });
+    return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({ error: err.message });
   }
 };

@@ -1,6 +1,6 @@
 import z from "zod";
 
-export const CreateAsset = z.object({
+export const CreateAssetRequest = z.object({
   assets_id: z
     .string("ต้องการเลขครุภัณฑ์")
     .trim()
@@ -12,4 +12,4 @@ export const CreateAsset = z.object({
     .int("ไอดีของอุปกรณ์เป็นจำนวนเต็ม"),
 });
 
-export type CreateAsset = z.infer<typeof CreateAsset>;
+export type CreateAssetRequest = z.infer<typeof CreateAssetRequest>;
