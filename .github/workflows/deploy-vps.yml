@@ -44,7 +44,7 @@ jobs:
       - name: Upload files with rsync
         run: |
           eval "$(ssh-agent -s)"
-          ssh-add - <<&lt "$SSH_PRIVATE_KEY"
+          ssh-add - <<< "$SSH_PRIVATE_KEY"
           rsync -az --delete 
             -e "ssh -o StrictHostKeyChecking=yes -p 22" 
             --exclude ".git" 
