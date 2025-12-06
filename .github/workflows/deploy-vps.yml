@@ -45,9 +45,9 @@ jobs:
         run: |
           eval "$(ssh-agent -s)"
           ssh-add - <<< "$SSH_PRIVATE_KEY"
-          rsync -az --delete 
-            -e "ssh -o StrictHostKeyChecking=yes -p 22" 
-            --exclude ".git" 
+          rsync -az --delete \
+            -e "ssh -o StrictHostKeyChecking=yes -p 22" \
+            --exclude ".git" \
             ./ "deploy@${SERVER_IP}:/var/www/en_w_backend/releases/${{ steps.set_ts.outputs.ts }}/"
 
       - name: Run remote deploy script
