@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+APP_DIR="/var/www/en_w_backend"
+RELEASES_DIR="$APP_DIR/releases"
+SHARED_DIR="$APP_DIR/shared"
+TIMESTAMP=$(date +%Y%m%d%H%M%S)
+RELEASE_DIR="$RELEASES_DIR/$TIMESTAMP"
+CURRENT_LINK="$APP_DIR/current"
+KEEP_RELEASES=5
+SERVICE="en_w_backend.service"
+
+log() { echo "[deploy] $1"; }
+
+log "Creating release directory: $RELEASE_DIR"
+mkdir -p "$RELEASE_DIR"
+
+log "Linking shared resources"
+# Example shared items (adjust for your stack)
+ln -sfn "$SHARED_DIR/.env" "$RELEASE_DIR/.env"
+
+log "Switching current symlink atomically"
+ln -sfn "$RELEASE_DIR" "$CURRENT_LINK"
+
+log "Reloading systemd service"
+sudo systemctl reload "$SERVICE" || sudo systemctl restart "$SERVICE"
+
+log "Cleaning up old releases"
+ls -1dt "$RELEASES_DIR"/* | tail -n +$((KEEP_RELEASES+1)) | xargs -r rm -rf --
+
+log "Deployment complete!"
