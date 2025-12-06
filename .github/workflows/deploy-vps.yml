@@ -39,7 +39,7 @@ jobs:
       - name: Add server to known_hosts
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -p 22 "$MY_SERVER" >> ~/.ssh/known_hosts
+          ssh-keyscan -p 22 "$SERVER_IP" >> ~/.ssh/known_hosts
 
       - name: Upload files with rsync
         run: |
