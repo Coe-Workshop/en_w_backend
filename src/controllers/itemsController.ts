@@ -1,39 +1,28 @@
 import { Request, Response } from "express";
 import db from "../db";
-import { assets, items, itemsToCategories } from "../db/schema";
+import { assets, categories, items, itemsToCategories } from "../db/schema";
 import { CreateItem, DeleteItem } from "../zSchemas/item";
 import { z } from "zod";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
-const formatHelper = async (itemId: number) => {
-  const withAssetId = await db.query.assets.findFirst({
-    where: eq(assets.item_id, itemId),
-  });
-  const withCategories = await db.query.items.findFirst({
-    where: eq(items.id, itemId),
-    with: {
-      categories: {
-        columns: {},
-        with: {
-          category: {
-            columns: {
-              name: true,
-            },
-          },
-        },
-      },
-    },
-  });
-
-  const formatResult = {
-    // if exist it will show
-    ...withAssetId,
-    ...withCategories,
-    categories: withCategories?.categories.map((g) => ({
-      name: g.category.name,
-    })),
-  };
-  return formatResult;
+// Damnnnnnnn This might be peak
+const get_item_categories_asset = async (itemId: number) => {
+  const resultWithFormat = await db
+    .select({
+      item_id: items.id,
+      asset_id: assets.assets_id,
+      item_name: items.name,
+      item_description: items.description,
+      item_image_url: items.image_url,
+      categories: sql`jsonb_agg(categories.name)`,
+    })
+    .from(items)
+    .where(eq(items.id, itemId))
+    .leftJoin(itemsToCategories, eq(itemsToCategories.item_id, itemId))
+    .leftJoin(categories, eq(categories.id, itemsToCategories.category_id))
+    .leftJoin(assets, eq(assets.item_id, itemId))
+    .groupBy(items.id, assets.id);
+  return resultWithFormat;
 };
 
 export const createItem = async (
@@ -68,11 +57,11 @@ export const createItem = async (
     // insert into junction table between item and category
     await db.insert(itemsToCategories).values(itemWithCategories);
 
-    const resultWithFormat = await formatHelper(itemId);
+    const ans = await get_item_categories_asset(itemId);
 
     return res.status(201).json({
       success: true,
-      data: resultWithFormat,
+      data: ans,
     });
   } catch (error) {
     /* 
@@ -107,13 +96,13 @@ export const deleteItem = async (
       });
     }
 
-    const resultWithFormat = await formatHelper(validatedId);
+    const ans = await get_item_categories_asset(validatedId);
 
     // item in junction table will be delete too
     await db.delete(items).where(eq(items.id, validatedId)).returning();
     return res.status(200).json({
       success: true,
-      data: resultWithFormat,
+      data: ans,
     });
   } catch (error) {
     /* 

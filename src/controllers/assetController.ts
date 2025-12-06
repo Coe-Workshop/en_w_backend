@@ -1,9 +1,28 @@
 import { Request, Response } from "express";
 import db from "../db";
-import { assets, items } from "../db/schema";
+import { assets, categories, items, itemsToCategories } from "../db/schema";
 import { z } from "zod";
 import { CreateAsset } from "../zSchemas/asset";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
+
+const get_item_categories_asset = async (itemId: number) => {
+  const resultWithFormat = await db
+    .select({
+      item_id: items.id,
+      asset_id: assets.assets_id,
+      item_name: items.name,
+      item_description: items.description,
+      item_image_url: items.image_url,
+      categories: sql`jsonb_agg(categories.name)`,
+    })
+    .from(items)
+    .where(eq(items.id, itemId))
+    .leftJoin(itemsToCategories, eq(itemsToCategories.item_id, itemId))
+    .leftJoin(categories, eq(categories.id, itemsToCategories.category_id))
+    .leftJoin(assets, eq(assets.item_id, itemId))
+    .groupBy(items.id, assets.id);
+  return resultWithFormat;
+};
 
 export const createAsset = async (
   req: Request,
@@ -26,17 +45,18 @@ export const createAsset = async (
 
     await db.insert(assets).values(validatedData);
 
-    const getItem = await db.query.items.findFirst({
-      where: eq(items.id, itemId),
-    });
-    const formatResult = {
-      ...getItem,
-      asset: validatedData.assets_id,
-    };
+    // const getItem = await db.query.items.findFirst({
+    //   where: eq(items.id, itemId),
+    // });
+    // const formatResult = {
+    //   ...getItem,
+    //   asset: validatedData.assets_id,
+    // };
+    const ans = await get_item_categories_asset(itemId);
 
     return res.status(201).json({
       success: true,
-      data: formatResult,
+      data: ans,
     });
   } catch (error) {
     /*
