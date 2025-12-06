@@ -3,7 +3,6 @@ set -euo pipefail
 
 APP_DIR="/var/www/en_w_backend"
 RELEASES_DIR="$APP_DIR/releases"
-SHARED_DIR="$APP_DIR/shared"
 TIMESTAMP=$(date +%Y%m%d%H%M%S)
 RELEASE_DIR="$RELEASES_DIR/$TIMESTAMP"
 CURRENT_LINK="$APP_DIR/current"
@@ -14,10 +13,6 @@ log() { echo "[deploy] $1"; }
 
 log "Creating release directory: $RELEASE_DIR"
 mkdir -p "$RELEASE_DIR"
-
-log "Linking shared resources"
-# Example shared items (adjust for your stack)
-ln -sfn "$SHARED_DIR/.env" "$RELEASE_DIR/.env"
 
 log "Switching current symlink atomically"
 ln -sfn "$RELEASE_DIR" "$CURRENT_LINK"
