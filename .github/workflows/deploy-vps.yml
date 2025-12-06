@@ -50,8 +50,8 @@ jobs:
             --exclude ".git" \
             ./ "deploy@${SERVER_IP}:/var/www/en_w_backend/releases/${{ steps.set_ts.outputs.ts }}/"
 
-      # - name: Run remote deploy script
-      #   run: |
-      #     eval "$(ssh-agent -s)"
-      #     ssh-add - <<< "$SSH_PRIVATE_KEY"
-      #     ssh "deploy@${SERVER_IP}" "TIMESTAMP=${{ steps.set_ts.outputs.ts }} bash -s" < ./scripts/remote_deploy
+      - name: Run remote deploy script
+        run: |
+          eval "$(ssh-agent -s)"
+          ssh-add - <<< "$SSH_PRIVATE_KEY"
+          ssh "deploy@${SERVER_IP}" "TIMESTAMP=${{ steps.set_ts.outputs.ts }} bash -s" < ./scripts/remote_deploy

@@ -20,7 +20,7 @@ ln -sfn "$RELEASE_DIR" "$CURRENT_LINK"
 log "Reloading systemd service"
 sudo systemctl reload "$SERVICE" || sudo systemctl restart "$SERVICE"
 
-# log "Cleaning up old releases"
-# ls -1dt "$RELEASES_DIR"/* | tail -n +$((KEEP_RELEASES+1)) | xargs -r rm -rf --
+log "Cleaning up old releases"
+ls -1dt "$RELEASES_DIR"/* | tail -n +$((KEEP_RELEASES+1)) | xargs -r rm -rf --
 
 log "Deployment complete!"
