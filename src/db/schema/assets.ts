@@ -1,6 +1,6 @@
 import { integer, pgTable, serial, text } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { items } from "./items";
+import { itemsTable } from "./items";
 import { transactions } from "./transactions";
 
 export const assets = pgTable("assets", {
@@ -8,7 +8,7 @@ export const assets = pgTable("assets", {
   assets_id: text("assets_id").notNull(),
   item_id: integer("item_id")
     .notNull()
-    .references(() => items.id, {
+    .references(() => itemsTable.id, {
       onDelete: "cascade",
     }),
 });
@@ -16,9 +16,9 @@ export const assets = pgTable("assets", {
 //one asset belong to one item
 //one asset can be in many transactions
 export const assetsRelations = relations(assets, ({ one, many }) => ({
-  item: one(items, {
+  item: one(itemsTable, {
     fields: [assets.item_id],
-    references: [items.id],
+    references: [itemsTable.id],
   }),
   transactions: many(transactions),
 }));
