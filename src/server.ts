@@ -49,7 +49,7 @@ app.use("/api/v1/items", itemRoutes);
 app.use("/api/v1/assets", assetRoutes);
 
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+  console.log(`COE Workshop Backend Service listening on port ${port}`);
 });
 
 export default app;
