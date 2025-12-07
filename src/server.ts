@@ -1,10 +1,12 @@
 import dotenv from "dotenv";
-import express, { Request, Response } from "express";
+import express from "express";
 import cors from "cors";
 import session from "express-session";
 import passport from "./config/passport";
 import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/user.routes";
+import itemRoutes from "./routes/item.routes";
+import assetRoutes from "./routes/asset.routes";
 
 dotenv.config();
 
@@ -42,6 +44,12 @@ app.use("/api/auth", authRoutes);
 
 app.use("/api/user", userRoutes);
 
+// app.use("/api/v1/categories", categoiresRoutes);
+app.use("/api/v1/items", itemRoutes);
+app.use("/api/v1/assets", assetRoutes);
+
 app.listen(port, () => {
-  console.log(`Example app listening on port ${port}`);
+  console.log(`COE Workshop Backend Service listening on port ${port}`);
 });
+
+export default app;
