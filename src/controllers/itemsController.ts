@@ -10,7 +10,7 @@ import HttpStatus from "http-status";
 const getItemCategoriesAsset = async (itemId: number) => {
   const resultWithFormat = await db
     .select({
-      item_id: items.id,
+      id: items.id,
       asset_id: assets.assets_id,
       name: items.name,
       description: items.description,
