@@ -1,8 +1,12 @@
 import { Router } from "express";
-import { createItem, deleteItem } from "../controllers/itemsController";
+import {
+  createItem,
+  deleteItem,
+  getItems,
+} from "../controllers/itemsController";
 const router = Router();
 
-// router.get("/", getAllItems);
+router.get("/", getItems);
 router.post("/", createItem);
 router.delete("/:id", deleteItem);
 
