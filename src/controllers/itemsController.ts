@@ -1,11 +1,6 @@
 import { Request, Response } from "express";
 import db from "../db";
-import {
-  assets,
-  categories,
-  itemsTable,
-  itemsToCategories,
-} from "../db/schema";
+import { assets, categories, items, itemsToCategories } from "../db/schema";
 import { CreateItemRequest, DeleteItemRequest } from "../zSchemas/item";
 import { z } from "zod";
 import { eq, sql } from "drizzle-orm";
@@ -14,19 +9,19 @@ import HttpStatus from "http-status";
 const getItemCategoriesAsset = async (itemId: number) => {
   const resultWithFormat = await db
     .select({
-      id: itemsTable.id,
+      id: items.id,
       asset_id: assets.assets_id,
-      name: itemsTable.name,
-      description: itemsTable.description,
-      image_url: itemsTable.image_url,
+      name: items.name,
+      description: items.description,
+      image_url: items.image_url,
       categories: sql`jsonb_agg(categories.name)`,
     })
-    .from(itemsTable)
-    .where(eq(itemsTable.id, itemId))
+    .from(items)
+    .where(eq(items.id, itemId))
     .leftJoin(itemsToCategories, eq(itemsToCategories.item_id, itemId))
     .leftJoin(categories, eq(categories.id, itemsToCategories.category_id))
     .leftJoin(assets, eq(assets.item_id, itemId))
-    .groupBy(itemsTable.id, assets.id);
+    .groupBy(items.id, assets.id);
   return resultWithFormat;
 };
 
@@ -35,10 +30,9 @@ export const getItems = async (
   res: Response,
 ): Promise<Response> => {
   try {
-    const data = await db.select().from(itemsTable);
-    return res.status(HttpStatus.CREATED).json({
-      success: true,
-      data,
+    const data = await db.select().from(items);
+    return res.status(HttpStatus.OK).json({
+      error: "กรุณาตรวจสอบข้อมูล",
     });
   } catch (err) {
     const svcErr = err as Error;
@@ -59,10 +53,7 @@ export const createItem = async (
       validatedData.description = undefined;
     }
 
-    const insertItem = await db
-      .insert(itemsTable)
-      .values(validatedData)
-      .returning();
+    const insertItem = await db.insert(items).values(validatedData).returning();
 
     const itemId = insertItem[0].id;
 
@@ -76,8 +67,7 @@ export const createItem = async (
     const ans = await getItemCategoriesAsset(itemId);
 
     return res.status(HttpStatus.CREATED).json({
-      success: true,
-      data: ans[0],
+      error: "กรุณาตรวจสอบข้อมูล",
     });
   } catch (err) {
     if (err instanceof z.ZodError) {
@@ -100,9 +90,9 @@ export const deleteItem = async (
     let id = req.params.id;
     const validatedId: DeleteItemRequest = DeleteItemRequest.parse(id);
     const isExist = await db
-      .select({ id: itemsTable.id })
-      .from(itemsTable)
-      .where(eq(itemsTable.id, validatedId));
+      .select({ id: items.id })
+      .from(items)
+      .where(eq(items.id, validatedId));
     if (isExist.length === 0) {
       res.status(HttpStatus.NOT_FOUND).json({
         success: false,
@@ -113,10 +103,7 @@ export const deleteItem = async (
     const ans = await getItemCategoriesAsset(validatedId);
 
     // item in junction table will be delete too
-    await db
-      .delete(itemsTable)
-      .where(eq(itemsTable.id, validatedId))
-      .returning();
+    await db.delete(items).where(eq(items.id, validatedId)).returning();
     return res.status(HttpStatus.OK).json({
       success: true,
       data: ans[0],

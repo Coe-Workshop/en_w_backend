@@ -1,11 +1,6 @@
 import { Request, Response } from "express";
 import db from "../db";
-import {
-  assets,
-  categories,
-  itemsTable,
-  itemsToCategories,
-} from "../db/schema";
+import { assets, categories, items, itemsToCategories } from "../db/schema";
 import { z } from "zod";
 import { CreateAssetRequest } from "../zSchemas/asset";
 import { eq, sql } from "drizzle-orm";
@@ -14,19 +9,19 @@ import HttpStatus from "http-status";
 const getItemCategoriesAsset = async (itemId: number) => {
   const resultWithFormat = await db
     .select({
-      item_id: itemsTable.id,
+      item_id: items.id,
       asset_id: assets.assets_id,
-      name: itemsTable.name,
-      description: itemsTable.description,
-      image_url: itemsTable.image_url,
+      name: items.name,
+      description: items.description,
+      image_url: items.image_url,
       categories: sql`jsonb_agg(categories.name)`,
     })
-    .from(itemsTable)
-    .where(eq(itemsTable.id, itemId))
+    .from(items)
+    .where(eq(items.id, itemId))
     .leftJoin(itemsToCategories, eq(itemsToCategories.item_id, itemId))
     .leftJoin(categories, eq(categories.id, itemsToCategories.category_id))
     .leftJoin(assets, eq(assets.item_id, itemId))
-    .groupBy(itemsTable.id, assets.id);
+    .groupBy(items.id, assets.id);
   return resultWithFormat;
 };
 
@@ -41,9 +36,9 @@ export const createAsset = async (
 
     const itemId = validatedData.item_id;
     const isExist = await db
-      .select({ id: itemsTable.id })
-      .from(itemsTable)
-      .where(eq(itemsTable.id, itemId));
+      .select({ id: items.id })
+      .from(items)
+      .where(eq(items.id, itemId));
     if (isExist.length === 0) {
       res.status(HttpStatus.NOT_FOUND).json({
         success: false,

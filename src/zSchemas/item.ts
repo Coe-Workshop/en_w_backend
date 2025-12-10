@@ -1,4 +1,5 @@
 import z from "zod";
+import { categories } from "../db/schema";
 
 // export const Item = z.object({
 //   id: z.number(),
@@ -6,6 +7,8 @@ import z from "zod";
 //   description: z.string().trim().optional(),
 //   image_url: z.string().trim().optional(),
 // });
+
+export const GetItemByIDRequest = z.object({});
 
 export const CreateItemRequest = z.object({
   name: z
@@ -32,5 +35,11 @@ export const DeleteItemRequest = z.coerce
   .max(2147483647, "ไม่พบอุปกรณ์ดังกล่าว")
   .int("ไอดีต้องเป็นจำนวนเต็ม");
 
+export const FilterItem = z.object({
+  // change to enum
+  category: z.coerce.number().optional(),
+});
+
+export type FilterItem = z.infer<typeof FilterItem>;
 export type CreateItemRequest = z.infer<typeof CreateItemRequest>;
 export type DeleteItemRequest = z.infer<typeof DeleteItemRequest>;
