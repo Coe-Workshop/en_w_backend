@@ -1,10 +1,10 @@
 import { pgEnum, pgTable, serial } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { itemsToCategories } from "./itemsToCategories";
+import { items } from "./items";
 
 export const itemCategory = pgEnum("item_category", [
   "MACHINE",
-  "MEASUREMENT",
+  "HANDTOOL",
   "ELECTRONIC",
   "OTHER",
 ]);
@@ -16,7 +16,7 @@ export const categories = pgTable("categories", {
 
 //one category can be in many item
 export const categoriesRelations = relations(categories, ({ many }) => ({
-  items: many(itemsToCategories),
+  items: many(items),
 }));
 
 export type Category = typeof categories.$inferSelect;

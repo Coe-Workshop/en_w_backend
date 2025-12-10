@@ -1,20 +1,23 @@
-import { pgTable, serial, text } from "drizzle-orm/pg-core";
+import { integer, pgTable, serial, text } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { assets } from "./assets";
-import { itemsToCategories } from "./itemsToCategories";
+import { categories } from "./categories";
 
 export const items = pgTable("items", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description").default("อุปกรณ์ชิ้นนี้ไม่มีคำอธิบาย"),
+  category_id: integer("category_id").notNull(),
   image_url: text("image_url"),
 });
 
-//one item has one asset
-//one item can has many category
-export const itemsRelations = relations(items, ({ one, many }) => ({
-  asset: one(assets),
-  categories: many(itemsToCategories),
+//one item has one asset and category
+export const itemsRelations = relations(items, ({ one }) => ({
+  assetId: one(assets),
+  category: one(categories, {
+    fields: [items.category_id],
+    references: [categories.id],
+  }),
 }));
 
 export type Item = typeof items.$inferSelect;

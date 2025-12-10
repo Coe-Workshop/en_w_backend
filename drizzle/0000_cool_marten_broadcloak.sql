@@ -1,5 +1,5 @@
 CREATE TYPE "public"."user_role" AS ENUM('BORROWER', 'ADMIN');--> statement-breakpoint
-CREATE TYPE "public"."item_category" AS ENUM('MACHINE', 'MEASUREMENT', 'ELECTRONIC', 'OTHER');--> statement-breakpoint
+CREATE TYPE "public"."item_category" AS ENUM('MACHINE', 'HANDTOOL', 'ELECTRONIC', 'OTHER');--> statement-breakpoint
 CREATE TYPE "public"."transaction_groups_status" AS ENUM('REQUESTED', 'APPROVED', 'REJECTED', 'LOANED', 'RETURNED');--> statement-breakpoint
 CREATE TABLE "users" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,

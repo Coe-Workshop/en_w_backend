@@ -6,11 +6,7 @@ import { transactions } from "./transactions";
 export const assets = pgTable("assets", {
   id: serial("id").primaryKey(),
   assets_id: text("assets_id").notNull(),
-  item_id: integer("item_id")
-    .notNull()
-    .references(() => items.id, {
-      onDelete: "cascade",
-    }),
+  item_id: integer("item_id").notNull(),
 });
 
 //one asset belong to one item

@@ -1,24 +1,24 @@
-import { pgTable, text, integer, serial } from "drizzle-orm/pg-core";
+import { pgTable, text, integer, serial, uuid } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { users } from "./users";
-import { transaction_groups } from "./transaction_groups";
+import { transactions } from "./transactions";
 
 export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
+  user_id: uuid("user_id").notNull(),
   detail: text("detail"),
-  user_id: integer("user_id").notNull(),
   transaction_id: integer("transaction_id").notNull(),
 });
 
-//one message belong to one user and transaction_groups
+//one message belong to one user and transaction
 export const messagesRelations = relations(messages, ({ one }) => ({
   user: one(users, {
     fields: [messages.user_id],
     references: [users.id],
   }),
-  transaction_group: one(transaction_groups, {
+  transaction: one(transactions, {
     fields: [messages.transaction_id],
-    references: [transaction_groups.id],
+    references: [transactions.id],
   }),
 }));
 
