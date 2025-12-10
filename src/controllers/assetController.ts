@@ -1,40 +1,20 @@
 import { Request, Response } from "express";
 import db from "../db";
-import { assets, categories, items, itemsToCategories } from "../db/schema";
+import { assets, items } from "../db/schema";
 import { z } from "zod";
 import { CreateAssetRequest } from "../zSchemas/asset";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import HttpStatus from "http-status";
-
-const getItemCategoriesAsset = async (itemId: number) => {
-  const resultWithFormat = await db
-    .select({
-      item_id: items.id,
-      asset_id: assets.assets_id,
-      name: items.name,
-      description: items.description,
-      image_url: items.image_url,
-      categories: sql`jsonb_agg(categories.name)`,
-    })
-    .from(items)
-    .where(eq(items.id, itemId))
-    .leftJoin(itemsToCategories, eq(itemsToCategories.item_id, itemId))
-    .leftJoin(categories, eq(categories.id, itemsToCategories.category_id))
-    .leftJoin(assets, eq(assets.item_id, itemId))
-    .groupBy(items.id, assets.id);
-  return resultWithFormat;
-};
+import { formatResponseData } from "./itemsController";
 
 export const createAsset = async (
   req: Request,
   res: Response,
 ): Promise<Response> => {
   try {
-    const validatedData: CreateAssetRequest = CreateAssetRequest.parse(
-      req.body,
-    );
+    const requestData: CreateAssetRequest = CreateAssetRequest.parse(req.body);
 
-    const itemId = validatedData.item_id;
+    const itemId = requestData.item_id;
     const isExist = await db
       .select({ id: items.id })
       .from(items)
@@ -46,13 +26,13 @@ export const createAsset = async (
       });
     }
 
-    await db.insert(assets).values(validatedData);
+    await db.insert(assets).values(requestData);
 
-    const ans = await getItemCategoriesAsset(itemId);
+    const responseData = await formatResponseData(itemId);
 
     return res.status(HttpStatus.CREATED).json({
       success: true,
-      data: ans[0],
+      data: responseData[0],
     });
   } catch (error) {
     /*
@@ -61,12 +41,32 @@ export const createAsset = async (
      */
     if (error instanceof z.ZodError) {
       return res.status(HttpStatus.BAD_REQUEST).json({
+        success: false,
         error: error.issues[0].message,
       });
     }
     const err = error as Error;
     return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({ error: err.message });
+      .json({ success: false, error: err.message });
   }
 };
+
+// export const deleteAsset = async (
+//   req: Request,
+//   res: Response,
+// ): Promise<Response> => {
+//   try {
+//   } catch (error) {
+//     if (error instanceof z.ZodError) {
+//       return res.status(HttpStatus.BAD_REQUEST).json({
+//         success: false,
+//         error: error.issues[0].message,
+//       });
+//     }
+//     const err = error as Error;
+//     return res
+//       .status(HttpStatus.INTERNAL_SERVER_ERROR)
+//       .json({ success: false, error: err.message });
+//   }
+// };

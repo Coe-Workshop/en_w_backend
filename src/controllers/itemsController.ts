@@ -1,29 +1,94 @@
 import { Request, Response } from "express";
 import db from "../db";
-import { assets, categories, items, itemsToCategories } from "../db/schema";
-import { CreateItemRequest, DeleteItemRequest } from "../zSchemas/item";
+import { categories, items, itemCategory, assets } from "../db/schema";
+import { CreateItemRequest, ItemIdRequest } from "../zSchemas/item";
 import { z } from "zod";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import HttpStatus from "http-status";
 
-// Damnnnnnnn This might be peak
-const getItemCategoriesAsset = async (itemId: number) => {
-  const resultWithFormat = await db
+export const formatResponseData = async (itemId: number) => {
+  const result = await db
     .select({
       id: items.id,
-      asset_id: assets.assets_id,
       name: items.name,
+      asset_id: assets.assets_id,
       description: items.description,
+      category: categories.name,
       image_url: items.image_url,
-      categories: sql`jsonb_agg(categories.name)`,
     })
     .from(items)
     .where(eq(items.id, itemId))
-    .leftJoin(itemsToCategories, eq(itemsToCategories.item_id, itemId))
-    .leftJoin(categories, eq(categories.id, itemsToCategories.category_id))
-    .leftJoin(assets, eq(assets.item_id, itemId))
-    .groupBy(items.id, assets.id);
-  return resultWithFormat;
+    .leftJoin(categories, eq(items.category_id, categories.id))
+    .leftJoin(assets, eq(items.id, assets.item_id));
+  return result;
+};
+
+export const getAllItems = async (
+  req: Request,
+  res: Response,
+): Promise<Response> => {
+  try {
+    const responseData = await db
+      .select({
+        id: items.id,
+        name: items.name,
+        asset_id: assets.assets_id,
+        description: items.description,
+        category: categories.name,
+        image_url: items.image_url,
+      })
+      .from(items)
+      .leftJoin(categories, eq(items.category_id, categories.id))
+      .leftJoin(assets, eq(items.id, assets.item_id));
+    return res.status(HttpStatus.OK).json({
+      success: true,
+      data: responseData,
+    });
+  } catch (error) {
+    const err = error as Error;
+    return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({ success: false, error: err.message });
+  }
+};
+
+export const getItemById = async (
+  req: Request,
+  res: Response,
+): Promise<Response> => {
+  try {
+    const id = req.params.id;
+    const requestedItemId: ItemIdRequest = ItemIdRequest.parse(id);
+
+    const isExist = await db
+      .select({ id: items.id })
+      .from(items)
+      .where(eq(items.id, requestedItemId));
+
+    if (isExist.length === 0) {
+      return res.status(HttpStatus.NOT_FOUND).json({
+        success: false,
+        error: "ไม่พบอุปกรณ์ที่ระบุ",
+      });
+    }
+    const responseData = await formatResponseData(requestedItemId);
+
+    return res.status(HttpStatus.OK).json({
+      success: true,
+      data: responseData[0],
+    });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(HttpStatus.BAD_REQUEST).json({
+        success: false,
+        error: error.issues[0].message,
+      });
+    }
+    const err = error as Error;
+    return res
+      .status(HttpStatus.INTERNAL_SERVER_ERROR)
+      .json({ success: false, error: err.message });
+  }
 };
 
 export const createItem = async (
@@ -31,35 +96,54 @@ export const createItem = async (
   res: Response,
 ): Promise<Response> => {
   try {
-    const validatedData: CreateItemRequest = CreateItemRequest.parse(req.body);
+    const requestData: CreateItemRequest = CreateItemRequest.parse(req.body);
+
+    type ItemCategory = (typeof itemCategory.enumValues)[number];
+
+    if (
+      !itemCategory.enumValues.includes(
+        requestData.category_name as ItemCategory,
+      )
+    ) {
+      return res.status(HttpStatus.NOT_FOUND).json({
+        success: false,
+        error: "ไม่พบหมวดหมู่ที่ระบุ",
+      });
+    }
+
+    // assign type to variable
+    const categoryName = requestData.category_name as ItemCategory;
+
+    const categoryId = await db
+      .select({ categoryId: categories.id })
+      .from(categories)
+      .where(eq(categories.name, categoryName))
+      .limit(1);
+
+    const { category_name, ...dataWithoutCategoryName } = requestData;
+
+    const validatedData = {
+      name: dataWithoutCategoryName.name,
+      category_id: categoryId[0].categoryId,
+      description: dataWithoutCategoryName.description,
+      image_url: dataWithoutCategoryName.image_url,
+    };
+
     // if user send empty string. make it fall to db default
     if (validatedData.description === "") {
       validatedData.description = undefined;
     }
 
-    // first insert item in to it table
     const insertItem = await db.insert(items).values(validatedData).returning();
 
     // get item id
     const itemId = insertItem[0].id;
 
-    /* 
-        create item with many category 
-        like (item_id, category_id)
-    */
-    const itemWithCategories = validatedData.category_ids.map((id) => ({
-      item_id: itemId,
-      category_id: id,
-    }));
-
-    // insert into junction table between item and category
-    await db.insert(itemsToCategories).values(itemWithCategories);
-
-    const ans = await getItemCategoriesAsset(itemId);
+    const responseData = await formatResponseData(itemId);
 
     return res.status(HttpStatus.CREATED).json({
       success: true,
-      data: ans[0],
+      data: responseData[0],
     });
   } catch (error) {
     /* 
@@ -68,13 +152,14 @@ export const createItem = async (
      */
     if (error instanceof z.ZodError) {
       return res.status(HttpStatus.BAD_REQUEST).json({
+        success: false,
         error: error.issues[0].message,
       });
     }
     const err = error as Error;
     return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({ error: err.message });
+      .json({ success: false, error: err.message });
   }
 };
 
@@ -83,26 +168,36 @@ export const deleteItem = async (
   res: Response,
 ): Promise<Response> => {
   try {
-    let id = req.params.id;
-    const validatedId: DeleteItemRequest = DeleteItemRequest.parse(id);
+    const id = req.params.id;
+    const requestedItemId: ItemIdRequest = ItemIdRequest.parse(id);
+
     const isExist = await db
       .select({ id: items.id })
       .from(items)
-      .where(eq(items.id, validatedId));
+      .where(eq(items.id, requestedItemId));
+
     if (isExist.length === 0) {
-      res.status(HttpStatus.NOT_FOUND).json({
+      return res.status(HttpStatus.NOT_FOUND).json({
         success: false,
-        message: "ไม่พบอุปกรณ์ที่ระบุ",
+        error: "ไม่พบอุปกรณ์ที่ระบุ",
       });
     }
 
-    const ans = await getItemCategoriesAsset(validatedId);
+    const isAssetIdExist = await db
+      .select()
+      .from(assets)
+      .where(eq(assets.item_id, requestedItemId));
 
-    // item in junction table will be delete too
-    await db.delete(items).where(eq(items.id, validatedId)).returning();
+    if (isAssetIdExist) {
+      return res.status(HttpStatus.CONFLICT).json({
+        success: false,
+        error: "โปรดลบเลขครุภัณฑ์ก่อนที่จะลบอุปกรณ์",
+      });
+    }
+
+    await db.delete(items).where(eq(items.id, requestedItemId));
     return res.status(HttpStatus.OK).json({
       success: true,
-      data: ans[0],
     });
   } catch (error) {
     /* 
@@ -111,12 +206,13 @@ export const deleteItem = async (
      */
     if (error instanceof z.ZodError) {
       return res.status(HttpStatus.BAD_REQUEST).json({
+        success: false,
         error: error.issues[0].message,
       });
     }
     const err = error as Error;
     return res
       .status(HttpStatus.INTERNAL_SERVER_ERROR)
-      .json({ error: err.message });
+      .json({ success: false, error: err.message });
   }
 };

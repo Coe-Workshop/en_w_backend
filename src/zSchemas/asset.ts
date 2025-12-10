@@ -6,7 +6,7 @@ export const CreateAssetRequest = z.object({
     .trim()
     .nonempty("กรุณากรอกเลขครุภัณฑ์"),
   item_id: z.coerce
-    .number({ message: "ไอดีต้องเป็นตัวเลข" })
+    .number({ error: "ไอดีต้องเป็นตัวเลข" })
     .min(1, "ไอดีของอุปกรณ์ต้องมากกว่า 0")
     .max(2147483647, "ไม่พบอุปกรณ์ดังกล่าว")
     .int("ไอดีของอุปกรณ์เป็นจำนวนเต็ม"),
