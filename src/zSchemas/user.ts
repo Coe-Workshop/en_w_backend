@@ -1,10 +1,7 @@
 import z from "zod";
+import { fa } from "zod/v4/locales";
 
-export const CreateAssetRequest = z.object({
-    id: z
-        .number()
-        .int()
-        .positive(),
+export const CreateUserRequest = z.object({
     first_name: z
         .string()
         .trim()
@@ -19,13 +16,14 @@ export const CreateAssetRequest = z.object({
         .string()
         .trim()
         .email(),
-    role: z
+    faculty: z
         .string()
         .trim(),
-    created_at: z
-        .date(),
-    deleted_at: z
-        .date()
+    phone: z
+        .string()
+        .trim(),
+    role: z
+        .enum(["BORROWER", "ADMIN"]),
 });
 
-export type CreateAssetRequest = z.infer<typeof CreateAssetRequest>;
+export type CreateUserRequest = z.infer<typeof CreateUserRequest>;
