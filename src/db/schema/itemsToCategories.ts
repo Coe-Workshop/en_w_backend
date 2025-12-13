@@ -1,6 +1,6 @@
 import { pgTable, integer, primaryKey } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { itemsTable } from "./items";
+import { items } from "./items";
 import { categories } from "./categories";
 
 export const itemsToCategories = pgTable(
@@ -8,7 +8,7 @@ export const itemsToCategories = pgTable(
   {
     item_id: integer("item_id")
       .notNull()
-      .references(() => itemsTable.id, { onDelete: "cascade" }),
+      .references(() => items.id, { onDelete: "cascade" }),
     category_id: integer("category_id")
       .notNull()
       .references(() => categories.id, { onDelete: "cascade" }),
@@ -22,9 +22,9 @@ export const itemsToCategories = pgTable(
 export const itemsToCategoriesRelations = relations(
   itemsToCategories,
   ({ one }) => ({
-    item: one(itemsTable, {
+    item: one(items, {
       fields: [itemsToCategories.item_id],
-      references: [itemsTable.id],
+      references: [items.id],
     }),
     category: one(categories, {
       fields: [itemsToCategories.category_id],
