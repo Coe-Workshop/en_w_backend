@@ -1,5 +1,6 @@
 import z from "zod";
 import { fa } from "zod/v4/locales";
+import { userRole } from "../db/schema/users";
 
 export const CreateUserRequest = z.object({
     first_name: z
@@ -23,7 +24,7 @@ export const CreateUserRequest = z.object({
         .string()
         .trim(),
     role: z
-        .enum(["BORROWER", "ADMIN"]),
+        .enum(["BORROWER","ADMIN"]),
 });
 
 export type CreateUserRequest = z.infer<typeof CreateUserRequest>;

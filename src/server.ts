@@ -7,6 +7,8 @@ import authRoutes from "./routes/auth.routes";
 import userRoutes from "./routes/user.routes";
 import itemRoutes from "./routes/item.routes";
 import assetRoutes from "./routes/asset.routes";
+import { UserRole, userRole } from "./db/schema";
+import { en } from "zod/v4/locales";
 
 dotenv.config();
 
@@ -35,7 +37,9 @@ app.use(
       sameSite: "lax",
     },
   }),
-);
+);  
+
+ console.log(Object.values(UserRole))
 
 app.use(passport.initialize());
 app.use(passport.session());

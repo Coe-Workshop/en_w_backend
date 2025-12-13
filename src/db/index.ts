@@ -20,6 +20,14 @@ pool
     process.exit(1);
   });
 
-const db = drizzle(pool, { schema });
+const db = drizzle(pool, {
+  schema,
+  logger: {
+    logQuery: (query, params) => {
+      console.log("Query:", query);
+      console.log("Params:", params);
+    },
+  },
+});
 
 export default db;
