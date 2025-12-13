@@ -11,9 +11,10 @@ export const items = pgTable("items", {
   image_url: text("image_url"),
 });
 
-//one item has one asset and category
-export const itemsRelations = relations(items, ({ one }) => ({
-  assetId: one(assets),
+//one item has one category
+//one ITEM has many assets
+export const itemsRelations = relations(items, ({ one, many }) => ({
+  assetId: many(assets),
   category: one(categories, {
     fields: [items.category_id],
     references: [categories.id],

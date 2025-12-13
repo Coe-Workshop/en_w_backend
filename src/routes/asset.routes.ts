@@ -1,7 +1,8 @@
 import { Router } from "express";
-import { createAsset } from "../controllers/assetController";
+import { createAsset, deleteAsset } from "../controllers/assetController";
 const router = Router();
 
-router.post("/", createAsset);
+router.post("/:id", createAsset);
+router.delete("/:assetId", deleteAsset);
 
 export default router;

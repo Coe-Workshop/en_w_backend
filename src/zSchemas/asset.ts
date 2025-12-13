@@ -5,11 +5,26 @@ export const CreateAssetRequest = z.object({
     .string("ต้องการเลขครุภัณฑ์")
     .trim()
     .nonempty("กรุณากรอกเลขครุภัณฑ์"),
-  item_id: z.coerce
-    .number({ error: "ไอดีต้องเป็นตัวเลข" })
-    .min(1, "ไอดีของอุปกรณ์ต้องมากกว่า 0")
-    .max(2147483647, "ไม่พบอุปกรณ์ดังกล่าว")
-    .int("ไอดีของอุปกรณ์เป็นจำนวนเต็ม"),
 });
 
+// export const DeleteAssetRequest = z.object({
+//   assets_id: z
+//     .string("ไม่พบเลขครุภัณฑ์ที่ระบุ")
+//     .trim()
+//     .nonempty("ต้องการเลขครุภัณฑ์"),
+// });
+
+export const DeleteAssetRequest = z
+  .string("ไม่พบเลขครุภัณฑ์ที่ระบุ")
+  .trim()
+  .nonempty("ต้องการเลขครุภัณฑ์");
+
+// export const DeleteAssetParamSche = z.object({
+//   assetId: z
+//     .string()
+//     .trim()
+//     .min(1, "ต้องการเลขครุภัณฑ์"),
+// });
+
 export type CreateAssetRequest = z.infer<typeof CreateAssetRequest>;
+export type DeleteAssetRequest = z.infer<typeof DeleteAssetRequest>;
