@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import * as schema from "./schema";
+import * as schema from "../models";
 
 dotenv.config();
 
@@ -22,4 +22,6 @@ pool
 
 const db = drizzle(pool, { schema });
 
-export default db;
+export { db, schema };
+export type DB = typeof db;
+export type DBTransaction = Parameters<Parameters<DB["transaction"]>[0]>[0];

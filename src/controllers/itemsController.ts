@@ -1,6 +1,4 @@
 import { Request, Response } from "express";
-import db from "../db";
-import { assets, categories, items, itemsToCategories } from "../db/schema";
 import { CreateItemRequest, DeleteItemRequest } from "../zSchemas/item";
 import { z } from "zod";
 import { eq, sql } from "drizzle-orm";

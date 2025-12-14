@@ -1,54 +1,66 @@
-import { ItemCategory } from "../models/items";
-import { DB } from "../types/db";
+import { eq } from "drizzle-orm";
+import { categories, ItemCategory, items } from "../models/item";
+import { AppErr } from "../utils/appErr";
 import { ItemRepository } from "./repository";
 import { CreateItemRequest } from "./validator";
+import HttpStatus from "http-status";
+import { DB } from "../config/drizzle";
 
 export const itemService = (db: DB, itemRepository: ItemRepository) => {
   const getAllItems = async () => {
-    const items = db.transaction(async (tx) => {
+    return await db.transaction(async (tx) => {
       return await itemRepository.getAllItems(tx);
     });
-    return items;
   };
 
   const getItemByID = async (id: number) => {
-    const item = db.transaction(async (tx) => {
-      return await itemRepository.getItemByID(tx, id);
+    const item = await db.transaction(async (tx) => {
+      return await itemRepository.getItem(tx, items.id, id);
     });
-    return item;
+
+    if (!item) {
+      throw new AppErr(HttpStatus.NOT_FOUND, "ไม่พบอุปกรณ์ที่ระบุ");
+    }
   };
 
   const createItem = async (req: CreateItemRequest) => {
-    const categoryName = req.category_name as ItemCategory;
-    const item = db.transaction(async (tx) => {
-      const categoryID = (
-        await itemRepository.getCategoryByName(tx, categoryName)
-      ).categoryID;
-      console.log(categoryID);
+    const name = req.category_name as ItemCategory;
+    return await db.transaction(async (tx) => {
+      const category = await itemRepository.getCategory(
+        tx,
+        categories.name,
+        name,
+      );
 
       const item = {
         ...req,
-        category_id: categoryID,
+        category_id: category.id,
         description: req.description ?? null,
       };
 
       return await itemRepository.createItem(tx, item);
     });
-    return item;
   };
 
-  const getCategoryByName = async (name: ItemCategory) => {
-    const category = db.transaction(async (tx) => {
-      return itemRepository.getCategoryByName(tx, name);
+  const deleteItemByID = async (id: number) => {
+    console.log("case: 1");
+    // if (isAssetIdExist) {
+    //   return res.status(HttpStatus.CONFLICT).json({
+    //     success: false,
+    //     error: "โปรดลบเลขครุภัณฑ์ก่อนที่จะลบอุปกรณ์",
+    //   });
+    // }
+
+    await db.transaction(async (tx) => {
+      await itemRepository.deleteItemByID(tx, id);
     });
-    return category;
   };
 
   return {
     getAllItems,
     getItemByID,
     createItem,
-    getCategoryByName,
+    deleteItemByID,
   };
 };
 

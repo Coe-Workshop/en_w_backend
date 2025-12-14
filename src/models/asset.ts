@@ -1,12 +1,14 @@
 import { integer, pgTable, serial, text } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-import { items } from "./items";
+import { items } from "./item";
 import { transactions } from "./transaction";
 
 export const assets = pgTable("assets", {
   id: serial("id").primaryKey(),
   assets_id: text("assets_id").notNull(),
-  item_id: integer("item_id").notNull(),
+  item_id: integer("item_id")
+    .notNull()
+    .references(() => items.id),
 });
 
 //one asset belong to one item
