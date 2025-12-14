@@ -8,7 +8,7 @@ import HttpStatus from "http-status";
 import { error } from "console";
 import { use } from "passport";
 
-/*
+
 export const deleteUser = async (req: Request, res: Response) => {
   try {;
     const validatedData: CreateUserRequest = CreateUserRequest.parse(req.body);
@@ -44,12 +44,12 @@ export const deleteUser = async (req: Request, res: Response) => {
     }
   }
 };
-*/
+
 
 export const updateUser = async (req: Request, res: Response) => {
   try {;
     const validatedData: CreateUserRequest = CreateUserRequest.parse(req.body);
-    console.log(validatedData);
+
     const check_Email = await db 
       .select() 
       .from(users)
@@ -61,6 +61,7 @@ export const updateUser = async (req: Request, res: Response) => {
       .from(users)
       .where(
         and (
+          eq(users.email, validatedData.email),
           eq(users.first_name, validatedData.first_name),
           eq(users.last_name, validatedData.last_name),
           eq(users.faculty, validatedData.faculty),
@@ -68,11 +69,13 @@ export const updateUser = async (req: Request, res: Response) => {
           eq(users.phone, validatedData.phone)
         )
       );
-
+    console.log("check_Email.length: ", check_Email.length);
+    console.log("check_Same_Data.length: ", check_Same_Data.length);
     if (check_Email.length > 0 && check_Same_Data.length == 0) {
       const updateUser = await db
       .update(users)
       .set(validatedData)
+      .where(eq(users.email, validatedData.email))
       .returning();
       return res.status(HttpStatus.OK).json(updateUser[0]);
     }

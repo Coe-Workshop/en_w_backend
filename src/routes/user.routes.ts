@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
-import { createUser ,updateUser} from "../controllers/userController";
+import { createUser ,updateUser ,deleteUser} from "../controllers/userController";
+import { de } from "zod/v4/locales";
 
 const router = Router();
 
@@ -24,4 +25,5 @@ const router = Router();
 
 router.post("/", createUser);
 router.patch("/", updateUser);
+router.delete("/", deleteUser);
 export default router;

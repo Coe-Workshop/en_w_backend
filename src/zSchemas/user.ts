@@ -24,7 +24,7 @@ export const CreateUserRequest = z.object({
         .string()
         .trim(),
     role: z
-        .enum(["BORROWER","ADMIN"]),
+        .enum(userRole.enumValues),
 });
 
 export type CreateUserRequest = z.infer<typeof CreateUserRequest>;

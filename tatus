@@ -1,0 +1,375 @@
+[33mcommit 3b3569c189bbed6b75de071eb130b8fa59fc0bbd[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mtask/CW-66[m[33m)[m
+Author: unknown <anucha.w@kkumail.com>
+Date:   Thu Dec 11 21:38:53 2025 +0700
+
+    2
+
+[33mcommit 054d82f9fcf1aaa8be7c7360fb8d91d3eb30ab78[m
+Author: Insee <insee134@gmail.com>
+Date:   Wed Dec 10 23:29:26 2025 +0700
+
+    CW-66 fix: router
+
+[33mcommit c168f3c79642c5bdbb2d5414361280178227ff41[m
+Author: unknown <anucha.w@kkumail.com>
+Date:   Wed Dec 10 23:10:46 2025 +0700
+
+    1
+
+[33mcommit 9ff93c3164ccb6f2a33d17e39374c191644a3a5a[m[33m ([m[1;31morigin/dev[m[33m, [m[1;32mdev[m[33m)[m
+Merge: 547a43d 852dbf7
+Author: Iodize13 <85572866+Iodize13@users.noreply.github.com>
+Date:   Sun Dec 7 18:18:56 2025 +0700
+
+    Merge pull request #14 from Coe-Workshop/task/CW-4
+    
+    CW-4
+
+[33mcommit 852dbf749efe169665aac5f1e9320582ef2f9cab[m[33m ([m[1;31morigin/task/CW-4[m[33m)[m
+Author: Insee <insee134@gmail.com>
+Date:   Sun Dec 7 18:17:39 2025 +0700
+
+    CW-4
+
+[33mcommit 547a43d000b31a521655bd488801adccfc5c622c[m
+Merge: 8930ef1 799ca7c
+Author: Iodize13 <85572866+Iodize13@users.noreply.github.com>
+Date:   Sun Dec 7 17:06:31 2025 +0700
+
+    Merge pull request #12 from Coe-Workshop/task/CW-37
+    
+    Task/cw 37
+
+[33mcommit 799ca7c5aaac88b3ee4d158f675bb60357dd40a0[m
+Author: Insee <insee134@gmail.com>
+Date:   Sun Dec 7 17:02:55 2025 +0700
+
+    CW-37
+
+[33mcommit 6636b29bbfc8cba8409da00b82602a2642c1f324[m
+Merge: 9661b7d 8930ef1
+Author: Iodize13 <85572866+Iodize13@users.noreply.github.com>
+Date:   Sun Dec 7 17:00:47 2025 +0700
+
+    Merge branch 'dev' into task/CW-37
+
+[33mcommit 9661b7d9c16c524803f1b0429fc924f77a83a686[m
+Author: Insee <insee134@gmail.com>
+Date:   Sun Dec 7 16:56:26 2025 +0700
+
+    CW-37
+
+[33mcommit 8930ef1e0249ab41f1d97c4d3beb0144774bbd0f[m
+Author: Insee <insee134@gmail.com>
+Date:   Sun Dec 7 03:41:11 2025 +0700
+
+    CW-3
+
+[33mcommit abd5e7dbba0c50e908a593ee50b2c9fe64342ab0[m
+Author: Insee <insee134@gmail.com>
+Date:   Sun Dec 7 03:14:15 2025 +0700
+
+    CW-3
+
+[33mcommit 1115e490911c030509854e50a225cc57fefd93b4[m
+Author: Insee <insee134@gmail.com>
+Date:   Sun Dec 7 02:56:09 2025 +0700
+
+    CW-3
+
+[33mcommit 13e620f02d87b04c86adf03ffe9ee2455f7014d5[m
+Author: Insee <insee134@gmail.com>
+Date:   Sun Dec 7 02:52:35 2025 +0700
+
+    CW-3
+
+[33mcommit afadc627f9ef38b1889425a77b66e57dbb6aa377[m
+Author: Insee <insee134@gmail.com>
+Date:   Sun Dec 7 02:40:13 2025 +0700
+
+    CW-3
+
+[33mcommit d9cb273449e369182f534460a6ab2af2ada63311[m
+Author: pwwddx <puwadon.p@kkumail.com>
+Date:   Sun Dec 7 01:09:00 2025 +0700
+
+    fix from pr ep2
+
+[33mcommit f5cd779dd74f03cebaeb3754ff4a9b83c019972c[m
+Author: pwwddx <puwadon.p@kkumail.com>
+Date:   Sun Dec 7 01:07:25 2025 +0700
+
+    fix from pr ep1
+
+[33mcommit 4eb1109f29d4f91acdc36decb3d3dc53471581ef[m
+Author: pwwddx <puwadon.p@kkumail.com>
+Date:   Sat Dec 6 22:31:32 2025 +0700
+
+    recreate cool sql
+
+[33mcommit 653f082ac6b8a2ac4d083d216059ab5b1a715e76[m
+Author: Insee <insee134@gmail.com>
+Date:   Sat Dec 6 22:24:26 2025 +0700
+
+    CW-3
+
+[33mcommit 5b708ff09e9f3aa5ca9e180aa798dd0ea1d7b141[m
+Author: Insee <insee134@gmail.com>
+Date:   Sat Dec 6 22:20:04 2025 +0700
+
+    CW-3
+
+[33mcommit 0bd74194dc659bda178e0bf8c2586adecdcdafd9[m
+Author: Insee <insee134@gmail.com>
+Date:   Sat Dec 6 21:39:47 2025 +0700
+
+    CW-3
+
+[33mcommit 348ed0722ca8df104ca874c35d0041ecdcf521b1[m
+Author: Insee <insee134@gmail.com>
+Date:   Sat Dec 6 21:31:56 2025 +0700
+
+    CW-3
+
+[33mcommit aaf9f9d44ddbba3be87437d81c2c9b9c40314376[m
+Author: Insee <insee134@gmail.com>
+Date:   Sat Dec 6 21:24:56 2025 +0700
+
+    CW-3
+
+[33mcommit fdf18d5cf6231f3f6f55b24ac3701995aea6bc96[m
+Author: Insee <insee134@gmail.com>
+Date:   Sat Dec 6 21:21:29 2025 +0700
+
+    CW-3
+
+[33mcommit 489271b335e8ed1970abda4de62a87e4db73f465[m
+Author: Insee <insee134@gmail.com>
+Date:   Sat Dec 6 21:18:00 2025 +0700
+
+    CW-3 fix:remove --omit=dev
+
+[33mcommit fd534b12fbf39e9f4aef0f75ef4f72c0a4189c8e[m
+Author: pwwddx <puwadon.p@kkumail.com>
+Date:   Sat Dec 6 17:01:09 2025 +0700
+
+    insert asset_id
+
+[33mcommit 7d296df6712f618b90065cefb1dbbfbda7fea2f3[m
+Author: pwwddx <puwadon.p@kkumail.com>
+Date:   Sat Dec 6 05:46:14 2025 +0700
+
+    add categories
+
+[33mcommit 8377ee2d09301eee4814c0c7b7d23961fa203bed[m
+Author: pwwddx <puwadon.p@kkumail.com>
+Date:   Fri Dec 5 22:39:45 2025 +0700
+
+    fix handle empty description
+
+[33mcommit 861d855e3282e08b0ea7c9212c9ddf76f9774eac[m
+Author: pwwddx <puwadon.p@kkumail.com>
+Date:   Fri Dec 5 19:18:43 2025 +0700
+
+    fix error message
+
+[33mcommit 5dc4474246d3d73ee7b20ec3887408208eba346d[m
+Author: pwwddx <puwadon.p@kkumail.com>
+Date:   Fri Dec 5 19:12:30 2025 +0700
+
+    create and delete item
+
+[33mcommit 3a1d0410a664e0331350c324a38668e0536edbca[m
+Author: Insee <insee134@gmail.com>
+Date:   Wed Dec 3 22:40:44 2025 +0700
+
+    CW-3 remove unwanted line
+
+[33mcommit 8629dc79780028d08d6a49993b51948cea173cc1[m
+Author: pwwddx <puwadon.p@kkumail.com>
+Date:   Wed Dec 3 22:22:26 2025 +0700
+
+    init commit
+
+[33mcommit 79944d1adb36309ca783976481727594d32e6fd3[m
+Author: pwwddx <puwadon.p@kkumail.com>
+Date:   Wed Dec 3 22:08:35 2025 +0700
+
+    fix handle connection!
+
+[33mcommit 5f803454325551a79b686585c11ab5efb9731411[m
+Author: Insee <insee134@gmail.com>
+Date:   Wed Dec 3 11:57:10 2025 +0700
+
+    CW-3 lockfile fix
+
+[33mcommit 6b6da0a0d993530ac3c0d0e28ef4be82eb20e2d9[m
+Author: Insee <insee134@gmail.com>
+Date:   Wed Dec 3 11:54:29 2025 +0700
+
+    CW-3 github workflow
+
+[33mcommit efe879625a93a3c5a018494683bc65c208e0e1f0[m
+Merge: cf92e57 d35821d
+Author: Iodize13 <85572866+Iodize13@users.noreply.github.com>
+Date:   Wed Dec 3 11:27:29 2025 +0700
+
+    Merge pull request #8 from Coe-Workshop/hotfix/add-lint
+    
+    Hotfix/add lint
+
+[33mcommit d35821dc1b243b85b6cfa1e1fb470e842bdc2080[m
+Merge: 0df6185 cf92e57
+Author: Iodize13 <85572866+Iodize13@users.noreply.github.com>
+Date:   Wed Dec 3 11:27:06 2025 +0700
+
+    Merge branch 'dev' into hotfix/add-lint
+
+[33mcommit 0df6185952dffd20d757f99dc15ebda43e8a9540[m
+Author: Insee <insee134@gmail.com>
+Date:   Wed Dec 3 11:20:44 2025 +0700
+
+    fix: add lint
+
+[33mcommit cf92e57401a2c24bb6a017999219471a472ee238[m
+Author: Insee <insee134@gmail.com>
+Date:   Wed Dec 3 11:10:13 2025 +0700
+
+    CW-3 update lint
+
+[33mcommit 27686f1415258b40a108f469281fdd47fb4ef0ec[m
+Author: Insee <insee134@gmail.com>
+Date:   Wed Dec 3 11:08:32 2025 +0700
+
+    CW-3 delete package-lock
+
+[33mcommit 3e70a334cd10b06e02212e31ccd8becb5bf5f7ef[m
+Author: pwwddx <puwadon.p@kkumail.com>
+Date:   Tue Dec 2 20:28:21 2025 +0700
+
+    need to fix db
+
+[33mcommit cf0e15eb8632023e6967d173fc7b17426cb122bf[m
+Merge: 1325d55 0e509fe
+Author: pwwddx <puwadon.p@kkumail.com>
+Date:   Tue Dec 2 16:57:49 2025 +0700
+
+    local changes
+
+[33mcommit 1325d557be4a1650431e244548e14f8284161236[m
+Author: pwwddx <puwadon.p@kkumail.com>
+Date:   Tue Dec 2 16:55:32 2025 +0700
+
+    local changes
+
+[33mcommit 0e509fed8271e0baa9419894832565811f894456[m
+Author: Insee <insee134@gmail.com>
+Date:   Mon Dec 1 20:22:23 2025 +0700
+
+    CW-3 linting
+
+[33mcommit eda4abf13f88f9a9c176ba2413f49e1ea8874920[m
+Author: Insee <insee134@gmail.com>
+Date:   Sun Nov 30 16:35:42 2025 +0700
+
+    CW-36 rebase
+
+[33mcommit 11a2095b91d1cee8b94ca17b4f64704c9dac4b8a[m
+Merge: fad34a4 37cad93
+Author: pwwddx <puwadon.p@kkumail.com>
+Date:   Sun Nov 30 15:27:53 2025 +0700
+
+    finish setup drizzle
+
+[33mcommit fad34a473cfd98fc03e7a1cd95a4ffbb9c44d7c0[m
+Author: pwwddx <puwadon.p@kkumail.com>
+Date:   Sun Nov 30 15:14:42 2025 +0700
+
+    finish setup drizzle
+
+[33mcommit 096fa5786f17d42412ffd7b95ffedf3c4ad9f537[m
+Merge: 1148fda 2fa73a8
+Author: Iodize13 <85572866+Iodize13@users.noreply.github.com>
+Date:   Sun Nov 30 14:58:11 2025 +0700
+
+    Merge pull request #3 from Coe-Workshop/hotfix/CW-36
+    
+    CW-36 Fixed safe version.
+
+[33mcommit 37cad9302f865574a36d9b9b0c6e2998eb818c9b[m
+Author: Insee <insee134@gmail.com>
+Date:   Sun Nov 30 13:12:12 2025 +0700
+
+    CW-36 Add bun.lock
+
+[33mcommit b511719796549c38be5ec1263260f4aa6cffde8d[m
+Author: Insee <insee134@gmail.com>
+Date:   Sun Nov 30 13:10:25 2025 +0700
+
+    CW-36 Fixed safe version.
+
+[33mcommit 2fa73a85d0f4c6fbdf9e101201e597074768a5e9[m
+Author: Insee <insee134@gmail.com>
+Date:   Sun Nov 30 13:00:40 2025 +0700
+
+    CW-36 Fixed safe version.
+
+[33mcommit c8085463d02efd3deaa812454a0e80c414fe7249[m
+Merge: 1148fda d082c14
+Author: Iodize13 <85572866+Iodize13@users.noreply.github.com>
+Date:   Thu Nov 27 02:26:47 2025 +0700
+
+    Merge pull request #1 from Coe-Workshop/task/CW-27
+    
+    CW-27 setup jest.
+
+[33mcommit d082c143cbba230f525002185ec6adf4dfd015b4[m[33m ([m[1;31morigin/task/CW-27[m[33m)[m
+Author: Insee <insee134@gmail.com>
+Date:   Thu Nov 27 02:24:49 2025 +0700
+
+    CW-27 setup jest.
+
+[33mcommit 00c7dddef3e67cfe87456868b5ac1d5fa9fb7588[m
+Author: pwwddx <puwadon.p@kkumail.com>
+Date:   Thu Nov 27 00:08:56 2025 +0700
+
+    initial setup
+
+[33mcommit 9c6a98ae5f09f6f4557587c16dc7c7292c16b614[m[33m ([m[1;31morigin/feat/tools[m[33m)[m
+Author: pwwddx <puwadon.p@kkumail.com>
+Date:   Sat Nov 22 22:55:55 2025 +0700
+
+    Before ORM jaiyen
+
+[33mcommit 1148fdabd90ae5ed6aa77bba23b3f4aec6d2e252[m
+Merge: 055ec7a 2fecf6e
+Author: Pattararnxx <pattaraporn.po@kkumail.com>
+Date:   Wed Nov 19 14:21:55 2025 +0700
+
+    Merge pull request #1 from Pattararnxx/pare
+    
+    register
+
+[33mcommit 2fecf6eb464eae1d6f2666dead09164b62ece112[m[33m ([m[1;31morigin/pare[m[33m)[m
+Author: Pattararnxx <pattaraporn.po@kkumail.com>
+Date:   Wed Nov 19 14:20:55 2025 +0700
+
+    register
+
+[33mcommit 055ec7a83d7fb4b768c86e655c686cc9bf914464[m
+Author: Pattararnxx <pattaraporn.po@kkumail.com>
+Date:   Tue Nov 18 12:24:19 2025 +0700
+
+    auth google
+
+[33mcommit 3d4828eece409cc50a489fb939287ef1cde2a570[m
+Author: Pattararnxx <pattaraporn.po@kkumail.com>
+Date:   Tue Nov 18 12:19:32 2025 +0700
+
+    Setup Project
+
+[33mcommit e15b3ec38e171eb495c626ddf35621e35e9f6c8c[m
+Author: Pattararnxx <pattaraporn.po@kkumail.com>
+Date:   Tue Nov 18 12:16:28 2025 +0700
+
+    Initial commit
