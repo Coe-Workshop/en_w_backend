@@ -18,7 +18,7 @@ router.get(
     failureRedirect: process.env.FRONTEND_URL || "http://localhost:3000",
   }),
   (req: Request, res: Response) => {
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    const frontendUrl = req.headers.origin || "http://localhost:3000";
     const user = req.user as GoogleUser;
     if (user && !user.isRegistered) {
       return res.redirect(`${frontendUrl}/register`);
