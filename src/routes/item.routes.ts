@@ -1,12 +1,19 @@
 import { Router } from "express";
 import { deleteItem, getItems } from "../controllers/itemsController";
-import itemController from "../item/controller";
+import itemHandler from "../item/handler";
+import { itemService } from "../item/service";
+import db from "../db";
+import { itemRepository } from "../item/repository";
 const router = Router();
 
-const controller = itemController();
+console.log("case: -1");
+// need to pass db from server.js
+const repository = itemRepository();
+const service = itemService(db, repository);
+const handler = itemHandler(service);
 
-router.get("/", getItems);
-router.post("/", controller.createItem);
+router.get("/", handler.getAllItems);
+router.post("/", handler.createItem);
 router.delete("/:id", deleteItem);
 
 export default router;

@@ -1,38 +1,64 @@
 import { eq, sql } from "drizzle-orm";
-import { assets, categories, items, itemsToCategories } from "../db/schema";
-import { DatabaseTransaction } from "../types/db";
-import { CreateItemRequest } from "../zSchemas/item";
+import { DBTransaction } from "../types/db";
+import { categories, ItemCategory, items, NewItem } from "../models/items";
+import { assets } from "../models/asset";
 
-export default class ItemRepository {
-  // create?
-  async insert(db: DatabaseTransaction, validatedData: CreateItemRequest) {
-    return await db.insert(items).values(validatedData).returning();
-  }
+export const itemRepository = () => {
+  console.log("case: -2");
+  const createItem = async (db: DBTransaction, item: NewItem) => {
+    console.log("case: 6");
+    const result = await db.insert(items).values(item).returning();
+    console.log("case: 7");
 
-  async getItemCategoriesAsset(db: DatabaseTransaction, itemId: number) {
-    return await db
+    if (Array.isArray(result)) return result[0];
+    return result;
+  };
+
+  const getAllItems = async (db: DBTransaction) => {
+    const result = await db
       .select({
         id: items.id,
-        asset_id: assets.assets_id,
         name: items.name,
+        assets_id: sql`jsonb_agg(assets.assets_id)`,
         description: items.description,
+        category: categories.name,
         image_url: items.image_url,
-        categories: sql`jsonb_agg(categories.name)`,
       })
       .from(items)
-      .where(eq(items.id, itemId))
-      .leftJoin(itemsToCategories, eq(itemsToCategories.item_id, itemId))
-      .leftJoin(categories, eq(categories.id, itemsToCategories.category_id))
-      .leftJoin(assets, eq(assets.item_id, itemId))
-      .groupBy(items.id, assets.id);
-  }
-  async createItemCategories(
-    db: DatabaseTransaction,
-    itemWithCategories: {
-      item_id: number;
-      category_id: number;
-    }[],
-  ) {
-    return await db.insert(itemsToCategories).values(itemWithCategories);
-  }
-}
+      .leftJoin(categories, eq(items.category_id, categories.id))
+      .leftJoin(assets, eq(items.id, assets.item_id))
+      .groupBy(items.id, categories.name);
+    return result;
+  };
+
+  const getItemByID = async (db: DBTransaction, id: number) => {
+    const result = await db
+      .select({
+        id: items.id,
+        name: items.name,
+        assets_id: sql`jsonb_agg(assets.assets_id)`,
+        description: items.description,
+        category: categories.name,
+        image_url: items.image_url,
+      })
+      .from(items)
+      .where(eq(items.id, id))
+      .leftJoin(categories, eq(items.category_id, categories.id))
+      .leftJoin(assets, eq(items.id, assets.item_id))
+      .groupBy(items.id, categories.name);
+    return result;
+  };
+
+  const getCategoryByName = async (db: DBTransaction, name: ItemCategory) => {
+    const category = await db
+      .select({ categoryID: categories.id })
+      .from(categories)
+      .where(eq(categories.name, name))
+      .limit(1);
+    return category[0];
+  };
+
+  return { createItem, getAllItems, getItemByID, getCategoryByName };
+};
+
+export type ItemRepository = ReturnType<typeof itemRepository>;

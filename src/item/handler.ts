@@ -1,65 +1,62 @@
-import { Request, Response, Router } from "express";
-import db from "../db";
-import { items } from "../db/schema";
-import { CreateItemRequest } from "../zSchemas/item";
+import { Request, Response } from "express";
 import { z } from "zod";
 import HttpStatus from "http-status";
-import ItemRepository from "./repository";
+import { ItemService } from "./service";
+import { ItemCategory, itemCategory } from "../models/items";
+import { CreateItemRequest } from "./validator";
 
-const itemController = () => {
-  const itemRepository = new ItemRepository();
-
-  const getItems = async (_: Request, res: Response): Promise<Response> => {
+const itemHandler = (itemService: ItemService) => {
+  const getAllItems = async (_: Request, res: Response): Promise<Response> => {
     try {
-      const data = await db.select().from(items);
+      const data = await itemService.getAllItems();
       return res.status(HttpStatus.OK).json({
         success: true,
-        data,
+        data: data,
       });
-    } catch (err) {
-      const svcErr = err as Error;
+    } catch (error) {
+      const err = error as Error;
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({ error: svcErr.message });
+        .json({ success: false, error: err.message });
     }
   };
 
   const createItem = async (req: Request, res: Response): Promise<Response> => {
     try {
-      const validatedData: CreateItemRequest = CreateItemRequest.parse(
-        req.body,
-      );
-      // if user send empty string. make it fall to db default
-      if (validatedData.description === "") {
-        validatedData.description = undefined;
-      }
+      console.log("case: 0");
+      const reqData: CreateItemRequest = CreateItemRequest.parse(req.body);
 
-      const data = await db.transaction(async (tx) => {
-        const insertItem = await itemRepository.insert(tx, validatedData);
-        const itemId = insertItem[0].id;
-        const itemWithCategories = validatedData.category_ids.map((id) => ({
-          item_id: itemId,
-          category_id: id,
-        }));
-        await itemRepository.createItemCategories(tx, itemWithCategories);
-        const ans = await itemRepository.getItemCategoriesAsset(tx, itemId);
-        // console.log(ans);
-        return ans[0];
-      });
-      return res.status(HttpStatus.CREATED).json({
-        success: true,
-        data: data,
-      });
-    } catch (err) {
-      if (err instanceof z.ZodError) {
-        return res.status(HttpStatus.BAD_REQUEST).json({
-          error: err.issues[0].message,
+      const categoryName = reqData.category_name as ItemCategory;
+      if (!itemCategory.enumValues.includes(categoryName)) {
+        return res.status(HttpStatus.NOT_FOUND).json({
+          success: false,
+          error: "ไม่พบหมวดหมู่ที่ระบุ",
         });
       }
-      const svcErr = err as Error;
+
+      console.log("case: 1");
+      const item = await itemService.createItem(reqData);
+      console.log("case: 2");
+      const data = {
+        ...item,
+        category_name: categoryName,
+      };
+
+      return res.status(HttpStatus.CREATED).json({
+        success: true,
+        data,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false,
+          error: error.issues[0].message,
+        });
+      }
+      const err = error as Error;
       return res
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({ error: svcErr.message });
+        .json({ success: false, error: err.message });
     }
   };
 
@@ -108,8 +105,9 @@ const itemController = () => {
   //   }
   // };
   return {
+    getAllItems,
     createItem,
   };
 };
 
-export default itemController;
+export default itemHandler;
