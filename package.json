@@ -4,7 +4,7 @@
   "main": "dist/index.ts",
   "scripts": {
     "test": "jest --coverage",
-    "dev": "tsx watch src/server.ts",
+    "dev": "tsx watch src/app.ts",
     "start": "node dist/server.js",
     "build": "tsc",
     "lint": "eslint",

@@ -1,56 +1,69 @@
-import 'dotenv/config';
+import "dotenv/config";
 import passport from "passport";
-import {GoogleUser} from "../types/user";
-import { Strategy as GoogleStrategy, Profile, VerifyCallback } from 'passport-google-oauth20';
-import {userDB} from "../db/users";
+import {
+  Strategy as GoogleStrategy,
+  Profile,
+  VerifyCallback,
+} from "passport-google-oauth20";
+import { db } from "./drizzle";
+import { GoogleUser } from "@/pkg/models";
+import userRepository from "@/pkg/user/repository";
+import userService from "@/pkg/user/service";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
-const GOOGLE_CALLBACK_URL=process.env.GOOGLE_CALLBACK_URL!;
+const GOOGLE_CALLBACK_URL = process.env.GOOGLE_CALLBACK_URL!;
+const userRepo = userRepository();
+const userSvc = userService(db, userRepo);
 
 passport.use(
-    new GoogleStrategy(
-        {
-            clientID: GOOGLE_CLIENT_ID,
-            clientSecret: GOOGLE_CLIENT_SECRET,
-            callbackURL: GOOGLE_CALLBACK_URL,
-        },
-        (accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback) => {
-            const email = profile.emails?.[0].value || '';
-            const isRegistered = userDB.exists(email);
-            const user: GoogleUser = {
-                googleId: profile.id,
-                email: email,
-                isRegistered: isRegistered,
-            };
+  new GoogleStrategy(
+    {
+      clientID: GOOGLE_CLIENT_ID,
+      clientSecret: GOOGLE_CLIENT_SECRET,
+      callbackURL: GOOGLE_CALLBACK_URL,
+    },
+    async (
+      _accessToken: string,
+      _refreshToken: string,
+      profile: Profile,
+      done: VerifyCallback,
+    ) => {
+      const email = profile.emails?.[0].value || "";
+      const isRegistered = await userSvc.getUserByEmail(email);
+      const user: GoogleUser = {
+        googleId: profile.id,
+        email: email,
+        isRegistered: isRegistered,
+      };
 
-            console.log(`User logged in: ${email} (Registered: ${isRegistered})`);
-            return done(null, user);
-        }
-    )
+      console.log(`User logged in: ${email} (Registered: ${isRegistered})`);
+      return done(null, user);
+    },
+  ),
 );
 
 // เก็บข้อมูล
-passport.serializeUser((user:Express.User, done) => {
-    const googleUser = user as GoogleUser;
-    done(null, {
-        googleId: googleUser.googleId,
-        email: googleUser.email,
-        isRegistered: googleUser.isRegistered,
-    });
+passport.serializeUser((user: Express.User, done) => {
+  const googleUser = user as GoogleUser;
+  done(null, {
+    googleId: googleUser.googleId,
+    email: googleUser.email,
+    isRegistered: googleUser.isRegistered,
+  });
 });
 
 // ส่งข้อมูล
 passport.deserializeUser((sessionUser: any, done) => {
-    const isRegistered = userDB.exists(sessionUser.email);
+  const isRegistered = userDB.exists(sessionUser.email);
 
-    const user: GoogleUser = {
-        googleId: sessionUser.googleId,
-        email: sessionUser.email,
-        isRegistered: isRegistered,
-    };
+  const user: GoogleUser = {
+    googleId: sessionUser.googleId,
+    email: sessionUser.email,
+    isRegistered: isRegistered,
+  };
 
-    done(null, user);
+  done(null, user);
 });
 
 export default passport;
