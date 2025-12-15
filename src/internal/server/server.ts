@@ -2,7 +2,8 @@ import express from "express";
 import cors from "cors";
 import session from "express-session";
 import passport from "@/config/passport";
-import routes from "./routes";
+import setupRoutes from "./router";
+import { db } from "@/config/drizzle";
 
 const makeServer = () => {
   const app = express();
@@ -37,7 +38,7 @@ const makeServer = () => {
   const run = () => {
     const port = process.env.PORT || 8080;
 
-    routes(app);
+    setupRoutes(app, db);
 
     app.listen(port, () => {
       console.log(`COE Workshop Backend Service listening on port ${port}`);

@@ -6,7 +6,7 @@ import { assets, categories, items } from "../models";
 import { AppErr } from "@/internal/utils/appErr";
 import { ItemRepository } from "../domain/item";
 
-export const itemRepository = (): ItemRepository => ({
+export const makeItemRepository = (): ItemRepository => ({
   async createItem(db, item) {
     try {
       const result = await db.insert(items).values(item).returning();
@@ -98,4 +98,4 @@ export const itemRepository = (): ItemRepository => ({
   },
 });
 
-export default itemRepository;
+export default makeItemRepository;

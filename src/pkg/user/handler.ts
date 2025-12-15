@@ -1,7 +1,7 @@
-import { UserService } from "./service";
+import { UserService } from "../domain/user";
 
-const userHandler = (userService: UserService) => {
+const makeUserHandler = (userService: UserService) => {
   return {};
 };
 
-export default userHandler;
+export default makeUserHandler;

@@ -4,7 +4,7 @@ import { users } from "../models";
 import { AppErr } from "@/internal/utils/appErr";
 import HttpStatus from "http-status";
 
-const userRepository = (): UserRepository => ({
+const makeUserRepository = (): UserRepository => ({
   getUser: async (db, column, value) => {
     const result = await db
       .select()
@@ -19,4 +19,4 @@ const userRepository = (): UserRepository => ({
   },
 });
 
-export default userRepository;
+export default makeUserRepository;

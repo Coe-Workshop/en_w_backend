@@ -1,5 +1,5 @@
 import dotenv from "dotenv";
-import makeServer from "./internal/server";
+import makeServer from "./internal/server/server";
 
 dotenv.config();
 

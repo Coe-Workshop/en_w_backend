@@ -2,7 +2,7 @@ import { DB } from "@/config/drizzle";
 import { ItemCategory } from "../models";
 import { ItemRepository, ItemService } from "../domain/item";
 
-export const itemService = (
+export const makeItemService = (
   db: DB,
   itemRepository: ItemRepository,
 ): ItemService => ({
@@ -41,4 +41,4 @@ export const itemService = (
   },
 });
 
-export default itemService;
+export default makeItemService;

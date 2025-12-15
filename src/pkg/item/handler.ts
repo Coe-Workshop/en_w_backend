@@ -1,4 +1,4 @@
-import { Request, Response } from "express";
+import { Request, Response, Router } from "express";
 import { z } from "zod";
 import HttpStatus from "http-status";
 import {
@@ -8,6 +8,17 @@ import {
 import { AppErr } from "@/internal/utils/appErr";
 import { itemCategory, ItemCategory } from "../models";
 import { ItemService } from "../domain/item";
+
+export const makeItemHandler = (service: ItemService) => {
+  const router = Router();
+  const handler = itemHandler(service);
+
+  router.get("/", handler.getAllItems);
+  router.get("/:id", handler.getItemByID);
+  router.post("/", handler.createItem);
+  router.delete("/:id", handler.deleteItemByID);
+  return router;
+};
 
 const itemHandler = (itemService: ItemService) => ({
   getAllItems: async (_: Request, res: Response): Promise<Response> => {
@@ -55,7 +66,6 @@ const itemHandler = (itemService: ItemService) => ({
       }
 
       const er = err as Error;
-      console.log(err);
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false,
         message:
