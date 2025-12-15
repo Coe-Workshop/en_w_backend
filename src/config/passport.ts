@@ -30,13 +30,19 @@ passport.use(
       done: VerifyCallback,
     ) => {
       const email = profile.emails?.[0].value || "";
-      const isRegistered = await userSvc.getUserByEmail(email);
+      let isRegistered = false;
+      try {
+        await userSvc.getUserByEmail(email);
+        isRegistered = true;
+      } catch {
+        // do nothing
+      }
+
       const user: GoogleUser = {
         googleId: profile.id,
         email: email,
-        isRegistered: isRegistered,
+        isRegistered,
       };
-
       console.log(`User logged in: ${email} (Registered: ${isRegistered})`);
       return done(null, user);
     },
@@ -54,14 +60,19 @@ passport.serializeUser((user: Express.User, done) => {
 });
 
 // ส่งข้อมูล
-passport.deserializeUser((sessionUser: any, done) => {
-  const isRegistered = userDB.exists(sessionUser.email);
-
-  const user: GoogleUser = {
+passport.deserializeUser(async (sessionUser: any, done) => {
+  let user: GoogleUser = {
     googleId: sessionUser.googleId,
     email: sessionUser.email,
-    isRegistered: isRegistered,
+    isRegistered: false,
   };
+
+  try {
+    await userSvc.getUserByEmail(sessionUser.email);
+    user = { ...user, isRegistered: true };
+  } catch {
+    // do nothing
+  }
 
   done(null, user);
 });
