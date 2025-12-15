@@ -5,9 +5,9 @@ import {
   CreateItemRequest,
   ItemIdRequest,
 } from "@/internal/validator/item.schema";
-import { AppErr } from "@/internal/utils/appErr";
 import { itemCategory, ItemCategory } from "../models";
 import { ItemService } from "../domain/item";
+import { AppErr } from "@/utils/appErr";
 
 export const makeItemHandler = (service: ItemService) => {
   const router = Router();

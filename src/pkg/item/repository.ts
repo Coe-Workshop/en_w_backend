@@ -3,8 +3,8 @@ import { DatabaseError } from "pg";
 import { DrizzleQueryError } from "drizzle-orm/errors";
 import HttpStatus from "http-status";
 import { assets, categories, items } from "../models";
-import { AppErr } from "@/internal/utils/appErr";
 import { ItemRepository } from "../domain/item";
+import { AppErr } from "@/utils/appErr";
 
 export const makeItemRepository = (): ItemRepository => ({
   async createItem(db, item) {

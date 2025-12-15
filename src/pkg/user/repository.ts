@@ -1,8 +1,8 @@
 import { eq, sql } from "drizzle-orm";
 import { UserRepository } from "../domain/user";
 import { users } from "../models";
-import { AppErr } from "@/internal/utils/appErr";
 import HttpStatus from "http-status";
+import { AppErr } from "@/utils/appErr";
 
 const makeUserRepository = (): UserRepository => ({
   getUser: async (db, column, value) => {
