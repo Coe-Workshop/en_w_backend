@@ -9,8 +9,8 @@ import { AppErr } from "@/internal/utils/appErr";
 import { itemCategory, ItemCategory } from "../models";
 import { ItemService } from "../domain/item";
 
-const itemHandler = (itemService: ItemService) => {
-  const getAllItems = async (_: Request, res: Response): Promise<Response> => {
+const itemHandler = (itemService: ItemService) => ({
+  getAllItems: async (_: Request, res: Response): Promise<Response> => {
     try {
       const data = await itemService.getAllItems();
       return res.status(HttpStatus.OK).json({
@@ -23,12 +23,9 @@ const itemHandler = (itemService: ItemService) => {
         .status(HttpStatus.INTERNAL_SERVER_ERROR)
         .json({ success: false, error: err.message });
     }
-  };
+  },
 
-  const getItemByID = async (
-    req: Request,
-    res: Response,
-  ): Promise<Response> => {
+  getItemByID: async (req: Request, res: Response): Promise<Response> => {
     try {
       const id: ItemIdRequest = ItemIdRequest.parse(req.params.id);
 
@@ -66,9 +63,9 @@ const itemHandler = (itemService: ItemService) => {
         error: er.message,
       });
     }
-  };
+  },
 
-  const createItem = async (req: Request, res: Response): Promise<Response> => {
+  createItem: async (req: Request, res: Response): Promise<Response> => {
     try {
       const reqData: CreateItemRequest = CreateItemRequest.parse(req.body);
 
@@ -116,12 +113,9 @@ const itemHandler = (itemService: ItemService) => {
         error: er.message,
       });
     }
-  };
+  },
 
-  const deleteItemByID = async (
-    req: Request,
-    res: Response,
-  ): Promise<Response> => {
+  deleteItemByID: async (req: Request, res: Response): Promise<Response> => {
     try {
       const id: ItemIdRequest = ItemIdRequest.parse(req.params.id);
 
@@ -166,14 +160,7 @@ const itemHandler = (itemService: ItemService) => {
         error: er.message,
       });
     }
-  };
-
-  return {
-    getAllItems,
-    getItemByID,
-    createItem,
-    deleteItemByID,
-  };
-};
+  },
+});
 
 export default itemHandler;
