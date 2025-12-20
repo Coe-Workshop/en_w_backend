@@ -9,12 +9,10 @@ import {
 } from "drizzle-orm/pg-core";
 import { messages } from "./message.db";
 import { transactions } from "./transaction.db";
-import { use } from "passport";
 
 export interface GoogleUser {
   googleId: string;
   email: string;
-  isRegistered: boolean;
 }
 
 export interface UserProfile {
@@ -23,7 +21,7 @@ export interface UserProfile {
   lastName: string;
 }
 
-export const userRole = pgEnum("user_role", ["BORROWER", "ADMIN"]);
+export const userRole = pgEnum("user_role", ["RESERVER", "ADMIN"]);
 export const UserRoleEnum = userRole.enumValues;
 
 export const users = pgTable("users", {
@@ -37,7 +35,7 @@ export const users = pgTable("users", {
   created_at: timestamp("created_at", { precision: 6, mode: "date" })
     .defaultNow()
     .notNull(),
-  deleted_at: timestamp("deleted_at_at", { precision: 6, mode: "date" }),
+  deleted_at: timestamp("deleted_at", { precision: 6, mode: "date" }),
 });
 
 // user can has many messages, reserve and approve times

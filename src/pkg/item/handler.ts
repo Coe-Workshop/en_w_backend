@@ -9,9 +9,9 @@ import { itemCategory, ItemCategory } from "../models";
 import { ItemService } from "../domain/item";
 import { AppErr } from "@/utils/appErr";
 
-export const makeItemHandler = (service: ItemService) => {
+export const makeItemHandler = (itemService: ItemService) => {
   const router = Router();
-  const handler = itemHandler(service);
+  const handler = itemHandler(itemService);
 
   router.get("/", handler.getAllItems);
   router.get("/:id", handler.getItemByID);
