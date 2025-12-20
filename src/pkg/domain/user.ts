@@ -1,10 +1,17 @@
 import { DBTransaction } from "@/config/drizzle";
-import { User } from "../models";
+import { NewUser, User } from "../models";
+import { CreateUserRequest } from "@/internal/validator/user.schema"; // Importing CreateUserRequest
 
 export interface UserRepository {
-  getUser: (db: DBTransaction, column: string, value: any) => Promise<User>;
+  createUser: (db: DBTransaction, data: NewUser) => Promise<User>;
+  deleteUserByID: (db: DBTransaction, id: string) => Promise<User>;
+  updateUser: (db: DBTransaction, data: Partial<User>) => Promise<User>;
+  getUserByID: (db: DBTransaction, id: string) => Promise<User>;
 }
 
 export interface UserService {
-  getUserByEmail: (email: string) => Promise<User>;
+  getUserByID: (id: string) => Promise<User>;
+  createUser: (req: CreateUserRequest) => Promise<User>;
+  deleteUserByID: (id: string) => Promise<User>;
+  updateUser: (data: Partial<User>) => Promise<User>;
 }

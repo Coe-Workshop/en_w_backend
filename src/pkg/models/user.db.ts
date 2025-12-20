@@ -9,6 +9,7 @@ import {
 } from "drizzle-orm/pg-core";
 import { messages } from "./message.db";
 import { transactions } from "./transaction.db";
+import { use } from "passport";
 
 export interface GoogleUser {
   googleId: string;
@@ -23,6 +24,7 @@ export interface UserProfile {
 }
 
 export const userRole = pgEnum("user_role", ["BORROWER", "ADMIN"]);
+export const UserRoleEnum = userRole.enumValues;
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
