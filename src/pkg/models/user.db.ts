@@ -1,9 +1,12 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
+  boolean,
+  index,
   pgEnum,
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
   varchar,
 } from "drizzle-orm/pg-core";
@@ -24,19 +27,26 @@ export interface UserProfile {
 export const userRole = pgEnum("user_role", ["RESERVER", "ADMIN"]);
 export const UserRoleEnum = userRole.enumValues;
 
-export const users = pgTable("users", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  firstName: text("first_name"),
-  lastName: text("last_name"),
-  email: text("email").notNull().unique(),
-  faculty: text("faculty").notNull(),
-  role: userRole("role"),
-  phone: varchar("phone", { length: 32 }),
-  createdAt: timestamp("created_at", { precision: 6, mode: "date" })
-    .defaultNow()
-    .notNull(),
-  deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),
-});
+export const users = pgTable(
+  "users",
+  {
+    id: uuid().primaryKey().defaultRandom(),
+    firstName: text().notNull(),
+    lastName: text().notNull(),
+    prefix: text().notNull(),
+    email: text().notNull().unique(),
+    isUniStudent: boolean().notNull(),
+    faculty: text(),
+    role: userRole().notNull(),
+    phone: varchar({ length: 32 }).notNull(),
+    createdAt: timestamp({ precision: 6, mode: "date" }).defaultNow().notNull(),
+    deletedAt: timestamp({ precision: 6, mode: "date" }),
+  },
+  (table) => [
+    uniqueIndex("idx_users_email").using("btree", sql`LOWER(${table.email})`),
+    index("idx_trgm_email").using("gin", sql`${table.email} gin_trgm_ops`),
+  ],
+);
 
 // user can has many messages, reserve and approve times
 export const usersRelations = relations(users, ({ many }) => ({

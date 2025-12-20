@@ -2,6 +2,7 @@ import dotenv from "dotenv";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import * as schema from "../pkg/models";
+import { sql } from "drizzle-orm";
 
 dotenv.config();
 
@@ -20,7 +21,17 @@ pool
     process.exit(1);
   });
 
-const db = drizzle(pool, { schema });
+const db = drizzle(pool, { schema, casing: "snake_case" });
+
+const migrate = async () => {
+  try {
+    await db.execute(sql`CREATE EXTENSION IF NOT EXISTS pg_trgm`);
+    console.log("Extension created successfully");
+  } catch (err) {
+    console.error("Error creating extension:", err);
+  }
+};
+migrate();
 
 export { db, schema };
 export type DB = typeof db;

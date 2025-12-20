@@ -8,17 +8,17 @@ export interface Item {
   name: string;
   assetsID?: unknown;
   description: string | null;
-  category?: "MACHINE" | "HANDTOOL" | "ELECTRONIC" | "OTHER" | null;
+  category?: ItemCategory;
   categoryID?: number;
   imageUrl: string | null;
 }
 
 export const items = pgTable("items", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  description: text("description").default("อุปกรณ์ชิ้นนี้ไม่มีคำอธิบาย"),
-  categoryID: integer("category_id").notNull(),
-  imageUrl: text("image_url"),
+  id: serial().primaryKey(),
+  name: text().notNull(),
+  description: text().default("อุปกรณ์ชิ้นนี้ไม่มีคำอธิบาย"),
+  categoryID: integer().notNull(),
+  imageUrl: text(),
 });
 
 //one item has one category
@@ -39,8 +39,8 @@ export const itemCategory = pgEnum("item_category", [
 ]);
 
 export const categories = pgTable("categories", {
-  id: serial("id").primaryKey(),
-  name: itemCategory("name").notNull().unique(),
+  id: serial().primaryKey(),
+  name: itemCategory().notNull().unique(),
 });
 
 //one category can be in many item

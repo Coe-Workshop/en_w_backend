@@ -4,9 +4,9 @@ import { items } from "./item.db";
 import { transactions } from "./transaction.db";
 
 export const assets = pgTable("assets", {
-  id: serial("id").primaryKey(),
-  assetsID: text("assets_id").notNull(),
-  itemID: integer("item_id")
+  id: serial().primaryKey(),
+  assetsID: text().notNull(),
+  itemID: integer()
     .notNull()
     .references(() => items.id),
 });
