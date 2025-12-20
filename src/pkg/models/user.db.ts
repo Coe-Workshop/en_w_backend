@@ -26,16 +26,16 @@ export const UserRoleEnum = userRole.enumValues;
 
 export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
-  first_name: text("first_name"),
-  last_name: text("last_name"),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
   email: text("email").notNull().unique(),
   faculty: text("faculty").notNull(),
   role: userRole("role"),
   phone: varchar("phone", { length: 32 }),
-  created_at: timestamp("created_at", { precision: 6, mode: "date" })
+  createdAt: timestamp("created_at", { precision: 6, mode: "date" })
     .defaultNow()
     .notNull(),
-  deleted_at: timestamp("deleted_at", { precision: 6, mode: "date" }),
+  deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),
 });
 
 // user can has many messages, reserve and approve times

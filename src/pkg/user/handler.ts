@@ -27,8 +27,7 @@ const userHandler = (userService: UserService) => ({
 
     return res.status(HttpStatus.OK).json({
       success: true,
-      authenticated: true,
-      user: req.user,
+      data: req.user,
     });
   },
 

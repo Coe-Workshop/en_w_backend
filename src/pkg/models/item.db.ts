@@ -6,27 +6,27 @@ import { assets } from "./asset.db";
 export interface Item {
   id: number;
   name: string;
-  assets_id?: unknown;
+  assetsID?: unknown;
   description: string | null;
   category?: "MACHINE" | "HANDTOOL" | "ELECTRONIC" | "OTHER" | null;
-  category_id?: number;
-  image_url: string | null;
+  categoryID?: number;
+  imageUrl: string | null;
 }
 
 export const items = pgTable("items", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   description: text("description").default("อุปกรณ์ชิ้นนี้ไม่มีคำอธิบาย"),
-  category_id: integer("category_id").notNull(),
-  image_url: text("image_url"),
+  categoryID: integer("category_id").notNull(),
+  imageUrl: text("image_url"),
 });
 
 //one item has one category
 //one ITEM has many assets
 export const itemsRelations = relations(items, ({ one, many }) => ({
-  assetId: many(assets),
+  assetID: many(assets),
   category: one(categories, {
-    fields: [items.category_id],
+    fields: [items.categoryID],
     references: [categories.id],
   }),
 }));

@@ -19,15 +19,15 @@ export const transactionStatus = pgEnum("transaction_status", [
 
 export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
-  asset_id: integer("asset_id").notNull(),
-  reserver_id: uuid("reserver_id").notNull(),
-  created_at: timestamp("created_at", { precision: 6, mode: "date" })
+  assetID: integer("asset_id").notNull(),
+  reserverID: uuid("reserver_id").notNull(),
+  createdAt: timestamp("created_at", { precision: 6, mode: "date" })
     .defaultNow()
     .notNull(),
-  approver_id: uuid("approver_id"),
+  approverID: uuid("approver_id"),
   status: transactionStatus("status").default("RESERVE").notNull(),
-  start_at: timestamp("start_at", { precision: 6, mode: "date" }).notNull(),
-  end_at: timestamp("start_at", { precision: 6, mode: "date" }).notNull(),
+  startedAt: timestamp("started_at", { precision: 6, mode: "date" }).notNull(),
+  endedAt: timestamp("ended_at", { precision: 6, mode: "date" }).notNull(),
 });
 
 /*
@@ -38,18 +38,18 @@ export const transactionsRelations = relations(
   transactions,
   ({ one, many }) => ({
     reserver: one(users, {
-      fields: [transactions.reserver_id],
+      fields: [transactions.reserverID],
       references: [users.id],
       relationName: "reserver",
     }),
     approver: one(users, {
-      fields: [transactions.approver_id],
+      fields: [transactions.approverID],
       references: [users.id],
       relationName: "approver",
     }),
     messages: many(messages),
     assetId: one(assets, {
-      fields: [transactions.asset_id],
+      fields: [transactions.assetID],
       references: [assets.id],
     }),
   }),

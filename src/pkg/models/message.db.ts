@@ -5,19 +5,19 @@ import { transactions } from "./transaction.db";
 
 export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
-  user_id: uuid("user_id").notNull(),
+  userID: uuid("user_id").notNull(),
   detail: text("detail"),
-  transaction_id: integer("transaction_id").notNull(),
+  transactionID: integer("transaction_id").notNull(),
 });
 
 //one message belong to one user and transaction
 export const messagesRelations = relations(messages, ({ one }) => ({
   user: one(users, {
-    fields: [messages.user_id],
+    fields: [messages.userID],
     references: [users.id],
   }),
   transaction: one(transactions, {
-    fields: [messages.transaction_id],
+    fields: [messages.transactionID],
     references: [transactions.id],
   }),
 }));

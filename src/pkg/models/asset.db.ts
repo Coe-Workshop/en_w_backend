@@ -5,8 +5,8 @@ import { transactions } from "./transaction.db";
 
 export const assets = pgTable("assets", {
   id: serial("id").primaryKey(),
-  assets_id: text("assets_id").notNull(),
-  item_id: integer("item_id")
+  assetsID: text("assets_id").notNull(),
+  itemID: integer("item_id")
     .notNull()
     .references(() => items.id),
 });
@@ -15,7 +15,7 @@ export const assets = pgTable("assets", {
 //one asset can be in many transactions
 export const assetsRelations = relations(assets, ({ one, many }) => ({
   item: one(items, {
-    fields: [assets.item_id],
+    fields: [assets.itemID],
     references: [items.id],
   }),
   transactions: many(transactions),
