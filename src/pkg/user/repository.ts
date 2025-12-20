@@ -99,7 +99,7 @@ const makeUserRepository = (): UserRepository => ({
       return result[0];
     } catch (err) {
       if (err instanceof DrizzleQueryError) {
-        throw new AppErr(HttpStatus.INTERNAL_SERVER_ERROR, "ERROR_UPDATING_USER");
+        throw new AppErr(HttpStatus.INTERNAL_SERVER_ERROR, "ERROR_GETTING_USER");
       } else {
         throw err;
       }
