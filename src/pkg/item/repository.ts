@@ -34,14 +34,14 @@ export const makeItemRepository = (): ItemRepository => ({
       .select({
         id: items.id,
         name: items.name,
-        assets_id: sql`jsonb_agg(assets.assets_id)`,
+        assetsID: sql`jsonb_agg(assets.assets_id)`,
         description: items.description,
         category: categories.name,
-        image_url: items.image_url,
+        imageUrl: items.imageUrl,
       })
       .from(items)
-      .leftJoin(categories, eq(items.category_id, categories.id))
-      .leftJoin(assets, eq(items.id, assets.item_id))
+      .leftJoin(categories, eq(items.categoryID, categories.id))
+      .leftJoin(assets, eq(items.id, assets.itemID))
       .groupBy(items.id, categories.name);
     return result;
   },
@@ -54,12 +54,12 @@ export const makeItemRepository = (): ItemRepository => ({
         assets_id: sql`jsonb_agg(assets.assets_id)`,
         description: items.description,
         category: categories.name,
-        image_url: items.image_url,
+        imageUrl: items.imageUrl,
       })
       .from(items)
       .where(eq(sql.identifier(`items"."${column}`), value))
-      .leftJoin(categories, eq(items.category_id, categories.id))
-      .leftJoin(assets, eq(items.id, assets.item_id))
+      .leftJoin(categories, eq(items.categoryID, categories.id))
+      .leftJoin(assets, eq(items.id, assets.itemID))
       .groupBy(items.id, categories.name);
 
     if (result.length === 0) {

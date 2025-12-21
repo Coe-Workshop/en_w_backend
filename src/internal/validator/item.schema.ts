@@ -7,8 +7,8 @@ export const CreateItemRequest = z.object({
     .min(2, "ชื่ออุปกรณ์ต้องมีอย่างน้อย 2 ตัวอักษร")
     .max(128, "ชื่อของอุปกรณ์ต้องห้ามเกิน 128 ตัวอักษร"),
   description: z.string().trim().optional(),
-  category_name: z.string({ error: "ต้องการชื่อหมวดหมู่" }).trim(),
-  image_url: z.string().trim().optional(),
+  categoryName: z.string({ error: "ต้องการชื่อหมวดหมู่" }).trim(),
+  imageUrl: z.string().trim().optional(),
 });
 
 export const ItemIdRequest = z.coerce
@@ -26,13 +26,13 @@ export const UpdateItemRequest = z
       .max(128, "ชื่อของอุปกรณ์ต้องห้ามเกิน 128 ตัวอักษร")
       .optional(),
     description: z.string("คำออธิบายต้องเป็นตัวอักษร").trim().optional(),
-    category_name: z.string("ไม่พบหมวดหมู่ที่ระบุ").trim().optional(),
-    assets_id: z
+    categoryName: z.string("ไม่พบหมวดหมู่ที่ระบุ").trim().optional(),
+    assetsID: z
       .string("เลขครุภัณฑ์ต้องเป็นตัวอักษร")
       .trim()
       .nonempty("เลขครุภัณฑ์ห้ามว่างเปล่า")
       .optional(),
-    image_url: z.string().trim().optional(),
+    imageUrl: z.string().trim().optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     error: "ต้องการข้อมูลอย่างน้อย 1 อย่างสำหหรับการอัพเดต",

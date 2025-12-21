@@ -80,8 +80,9 @@ const authHandler = (authService: AuthService) => ({
     const reqData: RegisterRequest = RegisterRequest.parse(req.body);
 
     try {
+      const googleUser = req.user as GoogleUser;
       const reqUser = {
-        email: req.user.email,
+        email: googleUser.email,
         ...reqData,
       };
       const user = authService.register(reqUser);

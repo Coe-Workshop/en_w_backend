@@ -79,7 +79,7 @@ const itemHandler = (itemService: ItemService) => ({
     try {
       const reqData: CreateItemRequest = CreateItemRequest.parse(req.body);
 
-      const categoryName = reqData.category_name as ItemCategory;
+      const categoryName = reqData.categoryName as ItemCategory;
       if (!itemCategory.enumValues.includes(categoryName)) {
         return res.status(HttpStatus.NOT_FOUND).json({
           success: false,
@@ -90,7 +90,7 @@ const itemHandler = (itemService: ItemService) => ({
       const item = await itemService.createItem(reqData);
       const data = {
         ...item,
-        category_name: categoryName,
+        categoryName: categoryName,
       };
 
       return res.status(HttpStatus.CREATED).json({

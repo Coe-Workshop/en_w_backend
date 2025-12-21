@@ -8,7 +8,7 @@ export interface Item {
   name: string;
   assetsID?: unknown;
   description: string | null;
-  category?: ItemCategory;
+  category?: ItemCategory | null;
   categoryID?: number;
   imageUrl: string | null;
 }
