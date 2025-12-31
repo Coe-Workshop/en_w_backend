@@ -4,8 +4,9 @@ import HttpStatus from "http-status";
 import {
   CreateItemRequest,
   ItemIdRequest,
+  UpdateItemRequest,
 } from "@/internal/validator/item.schema";
-import { itemCategory, ItemCategory } from "../models";
+import { Item, itemCategory, ItemCategory } from "../models";
 import { ItemService } from "../domain/item";
 import { AppErr } from "@/utils/appErr";
 
@@ -17,6 +18,7 @@ export const makeItemHandler = (itemService: ItemService) => {
   router.get("/:id", handler.getItemByID);
   router.post("/", handler.createItem);
   router.delete("/:id", handler.deleteItemByID);
+  router.patch("/:id", handler.updateItem);
   return router;
 };
 
@@ -171,6 +173,88 @@ const itemHandler = (itemService: ItemService) => ({
       });
     }
   },
-});
 
-export default itemHandler;
+  updateItem: async (req: Request, res: Response): Promise<Response> => {
+    try {
+      const id: ItemIdRequest = ItemIdRequest.parse(req.params.id);
+      const reqData: UpdateItemRequest = UpdateItemRequest.parse(req.body);
+      if (
+        reqData.category_name &&
+        !itemCategory.enumValues.includes(reqData.category_name as ItemCategory)
+      ) {
+        return res.status(HttpStatus.NOT_FOUND).json({
+          success: false,
+          error: "ไม่พบหมวดหมู่ที่ระบุ",
+        });
+      }
+
+      let isChanged = false;
+      const current = await itemService.getItemByID(id);
+
+      for (let [key, newValue] of Object.entries(reqData)) {
+        if (key === "category_name") {
+          key = "category";
+        }
+        const currentValue = current?.[key as keyof Item];
+
+        if (currentValue !== newValue && newValue !== undefined) {
+          isChanged = true;
+          break;
+        }
+      }
+
+      if (!isChanged) {
+        return res.status(HttpStatus.OK).json({
+          success: true,
+          data: current,
+          message: "อุปกรณ์ไม่มีการเปลี่ยนแปลงข้อมูล",
+        });
+      }
+
+      const updated = await itemService.updateItem(id, reqData);
+
+      const data = {
+        ...updated,
+        category_name: reqData.category_name ?? current?.category,
+        assetIDs: current?.assetIDs,
+      };
+      return res.status(HttpStatus.OK).json({
+        success: true,
+        data: data,
+      });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false,
+          error: err.issues[0].message,
+        });
+      }
+      if (err instanceof AppErr) {
+        if (
+          err.code === HttpStatus.NOT_FOUND &&
+          err.message === "RECORD_NOT_FOUND"
+        ) {
+          return res.status(HttpStatus.NOT_FOUND).json({
+            success: false,
+            error: "ไม่พบอุปกรณ์ที่ระบุ",
+          });
+        }
+        if (
+          err.code === HttpStatus.CONFLICT &&
+          err.message === "ITEM_NAME_ALREADY_EXIST"
+        ) {
+          return res.status(HttpStatus.CONFLICT).json({
+            success: false,
+            error: "มีอุปกรณ์ชื่อนี้แล้ว",
+          });
+        }
+      }
+      const er = err as Error;
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        description: "ไม่สามารถอัพเดทอุปกรณ์ได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
+        error: er.message,
+      });
+    }
+  },
+});

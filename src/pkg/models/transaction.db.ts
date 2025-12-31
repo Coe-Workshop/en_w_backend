@@ -18,14 +18,20 @@ export const transactionStatus = pgEnum("transaction_status", [
 ]);
 
 export const transactions = pgTable("transactions", {
-  id: serial().primaryKey(),
-  assetID: integer().notNull(),
-  reserverID: uuid().notNull(),
-  createdAt: timestamp({ precision: 6, mode: "date" }).defaultNow().notNull(),
-  approverID: uuid(),
-  status: transactionStatus().default("RESERVE").notNull(),
-  startedAt: timestamp({ precision: 6, mode: "date" }).notNull(),
-  endedAt: timestamp({ precision: 6, mode: "date" }).notNull(),
+  id: serial("id").primaryKey(),
+  assetID: integer("asset_id")
+    .notNull()
+    .references(() => assets.id),
+  reserverID: uuid("reserver_id")
+    .notNull()
+    .references(() => users.id),
+  createdAt: timestamp("create_at", { precision: 6, mode: "date" })
+    .defaultNow()
+    .notNull(),
+  approverID: uuid("approver_id").references(() => users.id),
+  status: transactionStatus("status").default("RESERVE").notNull(),
+  startedAt: timestamp("started_at", { precision: 6, mode: "date" }).notNull(),
+  endedAt: timestamp("ended_at", { precision: 6, mode: "date" }).notNull(),
 });
 
 /*

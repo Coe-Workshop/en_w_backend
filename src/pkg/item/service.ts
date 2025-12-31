@@ -26,8 +26,8 @@ export const makeItemService = (
 
       const item = {
         ...req,
-        category_id: category.id,
-        description: req.description ?? null,
+        categoryID: category.id,
+        description: req.description ?? undefined,
       };
 
       return await itemRepository.createItem(tx, item);
@@ -37,6 +37,28 @@ export const makeItemService = (
   deleteItemByID: async (id) => {
     await db.transaction(async (tx) => {
       await itemRepository.deleteItemByID(tx, id);
+    });
+  },
+
+  updateItem: async (id, req) => {
+    let categoryID: number | undefined;
+    if (req.category_name) {
+      const categoryName = req.category_name as ItemCategory;
+      await db.transaction(async (tx) => {
+        const category = await itemRepository.getCategory(
+          tx,
+          "name",
+          categoryName,
+        );
+        categoryID = category.id;
+      });
+    }
+    const updates = {
+      ...req,
+      categoryID,
+    };
+    return await db.transaction(async (tx) => {
+      return await itemRepository.updateItem(tx, id, updates);
     });
   },
 });

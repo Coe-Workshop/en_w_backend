@@ -30,17 +30,19 @@ export const UserRoleEnum = userRole.enumValues;
 export const users = pgTable(
   "users",
   {
-    id: uuid().primaryKey().defaultRandom(),
-    firstName: text().notNull(),
-    lastName: text().notNull(),
-    prefix: text().notNull(),
-    email: text().notNull().unique(),
-    isUniStudent: boolean().notNull(),
-    faculty: text(),
-    role: userRole().notNull(),
-    phone: varchar({ length: 32 }).notNull(),
-    createdAt: timestamp({ precision: 6, mode: "date" }).defaultNow().notNull(),
-    deletedAt: timestamp({ precision: 6, mode: "date" }),
+    id: uuid("id").primaryKey().defaultRandom(),
+    firstName: text("first_name").notNull(),
+    lastName: text("last_name").notNull(),
+    prefix: text("prefix").notNull(),
+    email: text("email").notNull().unique(),
+    isUniStudent: boolean("is_uni_student").notNull(),
+    faculty: text("faculty"),
+    role: userRole("role").notNull(),
+    phone: varchar("phone", { length: 32 }).notNull(),
+    createdAt: timestamp("created_at", { precision: 6, mode: "date" })
+      .defaultNow()
+      .notNull(),
+    deletedAt: timestamp("deleted_at", { precision: 6, mode: "date" }),
   },
   (table) => [
     uniqueIndex("idx_users_email").using("btree", sql`LOWER(${table.email})`),

@@ -2,20 +2,24 @@ import z from "zod";
 
 export const CreateItemRequest = z.object({
   name: z
-    .string({ error: "ต้องการชื่ออุปกรณ์" })
+    .string("ชื่ออุปกรณ์ต้องเป็นตัวอักษร")
     .trim()
     .min(2, "ชื่ออุปกรณ์ต้องมีอย่างน้อย 2 ตัวอักษร")
     .max(128, "ชื่อของอุปกรณ์ต้องห้ามเกิน 128 ตัวอักษร"),
-  description: z.string().trim().optional(),
-  category_name: z.string({ error: "ต้องการชื่อหมวดหมู่" }).trim(),
+  description: z.string("คำอธิบายต้องเป็นตัวอักษร").trim().optional(),
+  category_name: z
+    .string("ชื่อหมวดหมู่ต้องเป็นตัวอักษร")
+    .trim()
+    .toUpperCase()
+    .nonempty("หมวดหมู่ไม่สามารถว่างได้"),
   image_url: z.string().trim().optional(),
 });
 
 export const ItemIdRequest = z.coerce
-  .number({ error: "ไอดีต้องเป็นตัวเลข" })
-  .min(1, "ไอดีต้องมากกว่า 0")
+  .number("ไอดีของอุปกรณ์ต้องเป็นตัวเลข")
+  .min(1, "ไอดีของอุปกรณ์ต้องมากกว่า 0")
   .max(2147483647, "ไม่พบอุปกรณ์ดังกล่าว")
-  .int("ไอดีต้องเป็นจำนวนเต็ม");
+  .int("ไอดีของอุปกรณ์ต้องเป็นจำนวนเต็ม");
 
 export const UpdateItemRequest = z
   .object({
@@ -25,14 +29,17 @@ export const UpdateItemRequest = z
       .min(2, "ชื่ออุปกรณ์ต้องมีอย่างน้อย 2 ตัวอักษร")
       .max(128, "ชื่อของอุปกรณ์ต้องห้ามเกิน 128 ตัวอักษร")
       .optional(),
-    description: z.string("คำออธิบายต้องเป็นตัวอักษร").trim().optional(),
-    category_name: z.string("ไม่พบหมวดหมู่ที่ระบุ").trim().optional(),
-    assets_id: z
-      .string("เลขครุภัณฑ์ต้องเป็นตัวอักษร")
+    description: z.preprocess(
+      (val) => (val === "" ? ("อุปกรณ์ชิ้นนี้ไม่มีคำอธิบาย" as string) : val),
+      z.string("คำอธิบายต้องเป็นตัวอักษร").trim().optional(),
+    ),
+    category_name: z
+      .string("ชื่อหมวดหมู่ต้องเป็นตัวอักษร")
       .trim()
-      .nonempty("เลขครุภัณฑ์ห้ามว่างเปล่า")
+      .toUpperCase()
+      .nonempty("หมวดหมู่ไม่สามารถว่างได้")
       .optional(),
-    image_url: z.string().trim().optional(),
+    image_url: z.string("url ของรูปภาพต้องเป็นตัวอักษร").trim().optional(),
   })
   .refine((data) => Object.keys(data).length > 0, {
     error: "ต้องการข้อมูลอย่างน้อย 1 อย่างสำหหรับการอัพเดต",

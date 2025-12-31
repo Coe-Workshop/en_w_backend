@@ -7,7 +7,7 @@ import { ItemRepository } from "../domain/item";
 import { AppErr } from "@/utils/appErr";
 
 export const makeItemRepository = (): ItemRepository => ({
-  async createItem(db, item) {
+  createItem: async (db, item) => {
     try {
       const result = await db.insert(items).values(item).returning();
 
@@ -34,15 +34,16 @@ export const makeItemRepository = (): ItemRepository => ({
       .select({
         id: items.id,
         name: items.name,
-        assets_id: sql`jsonb_agg(assets.assets_id)`,
+        assetIDs: sql`jsonb_agg(assets.asset_id)`,
         description: items.description,
         category: categories.name,
-        image_url: items.image_url,
+        categoryID: items.categoryID,
+        imageUrl: items.imageUrl,
       })
       .from(items)
-      .leftJoin(categories, eq(items.category_id, categories.id))
-      .leftJoin(assets, eq(items.id, assets.item_id))
-      .groupBy(items.id, categories.name);
+      .leftJoin(categories, eq(items.categoryID, categories.id))
+      .leftJoin(assets, eq(assets.itemID, items.id))
+      .groupBy(items.id, categories.id);
     return result;
   },
 
@@ -51,15 +52,16 @@ export const makeItemRepository = (): ItemRepository => ({
       .select({
         id: items.id,
         name: items.name,
-        assets_id: sql`jsonb_agg(assets.assets_id)`,
+        assetIDs: sql`jsonb_agg(assets.asset_id)`,
         description: items.description,
         category: categories.name,
-        image_url: items.image_url,
+        categoryID: items.categoryID,
+        imageUrl: items.imageUrl,
       })
       .from(items)
       .where(eq(sql.identifier(`items"."${column}`), value))
-      .leftJoin(categories, eq(items.category_id, categories.id))
-      .leftJoin(assets, eq(items.id, assets.item_id))
+      .leftJoin(categories, eq(items.categoryID, categories.id))
+      .leftJoin(assets, eq(assets.itemID, items.id))
       .groupBy(items.id, categories.name);
 
     if (result.length === 0) {
@@ -92,6 +94,31 @@ export const makeItemRepository = (): ItemRepository => ({
         err.cause.code === "23503"
       ) {
         throw new AppErr(HttpStatus.CONFLICT, "ITEM_HAS_LINKED_ASSETS");
+      }
+      throw err;
+    }
+  },
+
+  updateItem: async (db, id, updates) => {
+    try {
+      const result = await db
+        .update(items)
+        .set(updates)
+        .where(eq(items.id, id))
+        .returning();
+
+      if (result.length === 0) {
+        throw new AppErr(HttpStatus.NOT_FOUND, "RECORD_NOT_FOUND");
+      }
+      return result[0];
+    } catch (err) {
+      if (
+        err instanceof DrizzleQueryError &&
+        err.cause instanceof DatabaseError &&
+        err.cause.code === "23505" &&
+        err.cause.message.includes("name")
+      ) {
+        throw new AppErr(HttpStatus.CONFLICT, "ITEM_NAME_ALREADY_EXIST");
       }
       throw err;
     }
