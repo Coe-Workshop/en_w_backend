@@ -3,6 +3,24 @@ import { relations } from "drizzle-orm";
 import { items } from "./item.db";
 import { transactions } from "./transaction.db";
 
+export interface AllAsset {
+  id: number;
+  assetID: string;
+  items: {
+    id: number;
+    name: string;
+  }[];
+}
+
+export interface Asset {
+  id: number;
+  assetID: string;
+  item: {
+    id: number;
+    name: string;
+  };
+}
+
 export const assets = pgTable("assets", {
   id: serial("id").primaryKey(),
   assetID: text("asset_id").notNull(),
@@ -18,5 +36,6 @@ export const assetsRelations = relations(assets, ({ many }) => ({
   transactions: many(transactions),
 }));
 
-export type Asset = typeof assets.$inferSelect;
+// export type Asset = typeof assets.$inferSelect;
 export type NewAsset = typeof assets.$inferInsert;
+export type delAsset = typeof assets.$inferInsert;

@@ -1,5 +1,5 @@
 import { integer, pgTable, serial, text } from "drizzle-orm/pg-core";
-import { relations, sql } from "drizzle-orm";
+import { relations } from "drizzle-orm";
 import { pgEnum } from "drizzle-orm/pg-core";
 import { assets } from "./asset.db";
 import { customType } from "drizzle-orm/pg-core";

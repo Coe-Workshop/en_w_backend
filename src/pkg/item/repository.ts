@@ -43,7 +43,8 @@ export const makeItemRepository = (): ItemRepository => ({
       .from(items)
       .leftJoin(categories, eq(items.categoryID, categories.id))
       .leftJoin(assets, eq(assets.itemID, items.id))
-      .groupBy(items.id, categories.id);
+      .groupBy(items.id, categories.id)
+      .orderBy(items.id);
     return result;
   },
 

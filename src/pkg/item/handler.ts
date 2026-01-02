@@ -32,9 +32,12 @@ const itemHandler = (itemService: ItemService) => ({
       });
     } catch (error) {
       const err = error as Error;
-      return res
-        .status(HttpStatus.INTERNAL_SERVER_ERROR)
-        .json({ success: false, error: err.message });
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message:
+          "ไม่สามารถเข้าถึงข้อมูลอุปกรณ์ทั้งหมดได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
+        error: err.message,
+      });
     }
   },
 

@@ -1,19 +1,38 @@
 import z from "zod";
 
-export const CreateItemRequest = z.object({
-  name: z
-    .string("ชื่ออุปกรณ์ต้องเป็นตัวอักษร")
-    .trim()
-    .min(2, "ชื่ออุปกรณ์ต้องมีอย่างน้อย 2 ตัวอักษร")
-    .max(128, "ชื่อของอุปกรณ์ต้องห้ามเกิน 128 ตัวอักษร"),
-  description: z.string("คำอธิบายต้องเป็นตัวอักษร").trim().optional(),
-  category_name: z
-    .string("ชื่อหมวดหมู่ต้องเป็นตัวอักษร")
-    .trim()
-    .toUpperCase()
-    .nonempty("หมวดหมู่ไม่สามารถว่างได้"),
-  image_url: z.string().trim().optional(),
-});
+export const CreateItemRequest = z.object(
+  {
+    name: z
+      .string({
+        error: (issue) =>
+          issue.input === undefined
+            ? "กรุณากรอกชื่ออุปกรณ์"
+            : "ชื่ออุปกรณ์ต้องเป็นตัวอักษร",
+      })
+      .trim()
+      .min(2, "ชื่ออุปกรณ์ต้องมีอย่างน้อย 2 ตัวอักษร")
+      .max(128, "ชื่อของอุปกรณ์ต้องห้ามเกิน 128 ตัวอักษร"),
+    description: z.string("คำอธิบายต้องเป็นตัวอักษร").trim().optional(),
+    category_name: z
+      .string({
+        error: (issue) =>
+          issue.input === undefined
+            ? "กรุณากรอกข้อมูลหมวดหมู่"
+            : "หมวดหมู่ต้องเป็นตัวอักษร",
+      })
+      .trim()
+      .toUpperCase()
+      .nonempty("หมวดหมู่ไม่สามารถว่างได้"),
+    image_url: z.string().trim().optional(),
+  },
+  {
+    error: (issue) => {
+      if (issue.input === undefined) {
+        return "กรุณากรอกข้อมูลเพื่อเพิ่มอุปกรณ์";
+      }
+    },
+  },
+);
 
 export const ItemIdRequest = z.coerce
   .number("ไอดีของอุปกรณ์ต้องเป็นตัวเลข")
@@ -22,27 +41,37 @@ export const ItemIdRequest = z.coerce
   .int("ไอดีของอุปกรณ์ต้องเป็นจำนวนเต็ม");
 
 export const UpdateItemRequest = z
-  .object({
-    name: z
-      .string("ชื่ออุปกรณ์ต้องเป็นตัวอักษร")
-      .trim()
-      .min(2, "ชื่ออุปกรณ์ต้องมีอย่างน้อย 2 ตัวอักษร")
-      .max(128, "ชื่อของอุปกรณ์ต้องห้ามเกิน 128 ตัวอักษร")
-      .optional(),
-    description: z.preprocess(
-      (val) => (val === "" ? ("อุปกรณ์ชิ้นนี้ไม่มีคำอธิบาย" as string) : val),
-      z.string("คำอธิบายต้องเป็นตัวอักษร").trim().optional(),
-    ),
-    category_name: z
-      .string("ชื่อหมวดหมู่ต้องเป็นตัวอักษร")
-      .trim()
-      .toUpperCase()
-      .nonempty("หมวดหมู่ไม่สามารถว่างได้")
-      .optional(),
-    image_url: z.string("url ของรูปภาพต้องเป็นตัวอักษร").trim().optional(),
-  })
+  .object(
+    {
+      name: z
+        .string("ชื่ออุปกรณ์ต้องเป็นตัวอักษร")
+        .trim()
+        .min(2, "ชื่ออุปกรณ์ต้องมีอย่างน้อย 2 ตัวอักษร")
+        .max(128, "ชื่อของอุปกรณ์ต้องห้ามเกิน 128 ตัวอักษร")
+        .optional(),
+      description: z.preprocess(
+        (val) => (val === "" ? ("อุปกรณ์ชิ้นนี้ไม่มีคำอธิบาย" as string) : val),
+        z.string("คำอธิบายต้องเป็นตัวอักษร").trim().optional(),
+      ),
+      category_name: z
+        .string("ชื่อหมวดหมู่ต้องเป็นตัวอักษร")
+        .trim()
+        .toUpperCase()
+        .nonempty("หมวดหมู่ไม่สามารถว่างได้")
+        .optional(),
+      image_url: z.string("url ของรูปภาพต้องเป็นตัวอักษร").trim().optional(),
+    },
+    {
+      error: (issue) => {
+        if (issue.input === undefined) {
+          return "กรุณากรอกข้อมูลเพื่ออัปเดต";
+        }
+      },
+    },
+  )
+
   .refine((data) => Object.keys(data).length > 0, {
-    error: "ต้องการข้อมูลอย่างน้อย 1 อย่างสำหหรับการอัพเดต",
+    error: "ต้องการข้อมูลอย่างน้อย 1 อย่างสำหหรับการอัอัปเดต,",
   });
 
 export type CreateItemRequest = z.infer<typeof CreateItemRequest>;
