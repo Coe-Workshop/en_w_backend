@@ -3,22 +3,13 @@ import { relations } from "drizzle-orm";
 import { items } from "./item.db";
 import { transactions } from "./transaction.db";
 
-export interface AllAsset {
-  id: number;
-  assetID: string;
-  items: {
-    id: number;
-    name: string;
-  }[];
-}
-
 export interface Asset {
   id: number;
   assetID: string;
   item: {
     id: number;
     name: string;
-  };
+  } | null;
 }
 
 export const assets = pgTable("assets", {

@@ -1,4 +1,4 @@
-import { eq, sql, and, ilike } from "drizzle-orm";
+import { eq, and, ilike } from "drizzle-orm";
 import { DatabaseError } from "pg";
 import { DrizzleQueryError } from "drizzle-orm/errors";
 import HttpStatus from "http-status";
@@ -10,16 +10,16 @@ export const makeAssetRepository = (): AssetRepository => ({
   getAllAssets: async (db) => {
     const result = await db
       .select({
-        id: sql<number>`MIN(${assets.id})`,
+        id: assets.id,
         assetID: assets.assetID,
-        items: sql<
-          { id: number; name: string }[]
-        >`jsonb_agg(json_build_object('id', ${items.id}, 'name', ${items.name}))`,
+        item: {
+          id: items.id,
+          name: items.name,
+        },
       })
       .from(assets)
-      .leftJoin(items, eq(assets.itemID, items.id))
-      .groupBy(assets.assetID)
-      .orderBy(sql<number>`MIN(${assets.id})`);
+      .leftJoin(items, eq(items.id, assets.itemID))
+      .orderBy(assets.id);
 
     return result;
   },
