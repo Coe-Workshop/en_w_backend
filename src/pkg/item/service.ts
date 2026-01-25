@@ -20,7 +20,7 @@ export const makeItemService = (
   },
 
   createItem: async (req) => {
-    const name = req.category_name as ItemCategory;
+    const name = req.categoryName as ItemCategory;
     return await db.transaction(async (tx) => {
       const category = await itemRepository.getCategory(tx, "name", name);
 
@@ -42,8 +42,8 @@ export const makeItemService = (
 
   updateItem: async (id, req) => {
     let categoryID: number | undefined;
-    if (req.category_name) {
-      const categoryName = req.category_name as ItemCategory;
+    if (req.categoryName) {
+      const categoryName = req.categoryName as ItemCategory;
       await db.transaction(async (tx) => {
         const category = await itemRepository.getCategory(
           tx,

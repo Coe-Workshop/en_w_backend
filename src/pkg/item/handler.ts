@@ -84,7 +84,7 @@ const itemHandler = (itemService: ItemService) => ({
     try {
       const reqData: CreateItemRequest = CreateItemRequest.parse(req.body);
 
-      const categoryName = reqData.category_name as ItemCategory;
+      const categoryName = reqData.categoryName as ItemCategory;
       if (!itemCategory.enumValues.includes(categoryName)) {
         return res.status(HttpStatus.NOT_FOUND).json({
           success: false,
@@ -95,7 +95,7 @@ const itemHandler = (itemService: ItemService) => ({
       const item = await itemService.createItem(reqData);
       const data = {
         ...item,
-        category_name: categoryName,
+        categoryName: categoryName,
       };
 
       return res.status(HttpStatus.CREATED).json({
@@ -182,8 +182,8 @@ const itemHandler = (itemService: ItemService) => ({
       const id: ItemIdRequest = ItemIdRequest.parse(req.params.id);
       const reqData: UpdateItemRequest = UpdateItemRequest.parse(req.body);
       if (
-        reqData.category_name &&
-        !itemCategory.enumValues.includes(reqData.category_name as ItemCategory)
+        reqData.categoryName &&
+        !itemCategory.enumValues.includes(reqData.categoryName as ItemCategory)
       ) {
         return res.status(HttpStatus.NOT_FOUND).json({
           success: false,
@@ -218,7 +218,7 @@ const itemHandler = (itemService: ItemService) => ({
 
       const data = {
         ...updated,
-        category_name: reqData.category_name ?? current?.category,
+        categoryName: reqData.categoryName ?? current?.category,
         assetIDs: current?.assetIDs,
       };
       return res.status(HttpStatus.OK).json({

@@ -1,6 +1,5 @@
 import { Request, Response, Router } from "express";
 import { AssetService } from "../domain/asset";
-import { ItemIdRequest } from "@/internal/validator/item.schema";
 import {
   CreateAssetRequest,
   DeleteAssetRequest,
@@ -14,8 +13,8 @@ export const makeAssetHandler = (assetService: AssetService) => {
   const handler = assetHandler(assetService);
 
   router.get("/", handler.getAllAssets);
-  router.post("/:id", handler.createAsset);
-  router.delete("/:id", handler.deleteAsset);
+  router.post("/", handler.createAsset);
+  router.delete("/", handler.deleteAsset);
   return router;
 };
 
@@ -40,8 +39,8 @@ const assetHandler = (assetService: AssetService) => ({
 
   createAsset: async (req: Request, res: Response): Promise<Response> => {
     try {
-      const itemID: ItemIdRequest = ItemIdRequest.parse(req.params.id);
       const reqData: CreateAssetRequest = CreateAssetRequest.parse(req.body);
+      const itemID = reqData.itemID;
       const asset = await assetService.createAsset(itemID, reqData);
       return res.status(HttpStatus.CREATED).json({
         success: true,
@@ -85,8 +84,8 @@ const assetHandler = (assetService: AssetService) => ({
 
   deleteAsset: async (req: Request, res: Response): Promise<Response> => {
     try {
-      const itemID: ItemIdRequest = ItemIdRequest.parse(req.params.id);
       const reqData: DeleteAssetRequest = DeleteAssetRequest.parse(req.body);
+      const itemID = reqData.itemID;
       await assetService.deleteAsset(itemID, reqData);
       return res.status(HttpStatus.CREATED).json({
         success: true,

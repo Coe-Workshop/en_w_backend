@@ -13,7 +13,7 @@ export const CreateItemRequest = z.object(
       .min(2, "ชื่ออุปกรณ์ต้องมีอย่างน้อย 2 ตัวอักษร")
       .max(128, "ชื่อของอุปกรณ์ต้องห้ามเกิน 128 ตัวอักษร"),
     description: z.string("คำอธิบายต้องเป็นตัวอักษร").trim().optional(),
-    category_name: z
+    categoryName: z
       .string({
         error: (issue) =>
           issue.input === undefined
@@ -53,7 +53,7 @@ export const UpdateItemRequest = z
         (val) => (val === "" ? ("อุปกรณ์ชิ้นนี้ไม่มีคำอธิบาย" as string) : val),
         z.string("คำอธิบายต้องเป็นตัวอักษร").trim().optional(),
       ),
-      category_name: z
+      categoryName: z
         .string("ชื่อหมวดหมู่ต้องเป็นตัวอักษร")
         .trim()
         .toUpperCase()

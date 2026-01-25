@@ -29,7 +29,6 @@ const setupRoutes = (app: Express, db: DB) => {
   const userService = makeUserService(db, userRepository);
   const userHandler = makeUserHandler(userService);
   app.use("/api/v1/user", userHandler);
-  // app.use("/api/v1/asset");
 };
 
 export default setupRoutes;
