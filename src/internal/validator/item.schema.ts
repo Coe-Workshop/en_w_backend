@@ -23,7 +23,7 @@ export const CreateItemRequest = z.object(
       .trim()
       .toUpperCase()
       .nonempty("หมวดหมู่ไม่สามารถว่างได้"),
-    image_url: z.string().trim().optional(),
+    imageUrl: z.string().trim().optional(),
   },
   {
     error: (issue) => {
@@ -59,7 +59,7 @@ export const UpdateItemRequest = z
         .toUpperCase()
         .nonempty("หมวดหมู่ไม่สามารถว่างได้")
         .optional(),
-      image_url: z.string("url ของรูปภาพต้องเป็นตัวอักษร").trim().optional(),
+      imageUrl: z.string("url ของรูปภาพต้องเป็นตัวอักษร").trim().optional(),
     },
     {
       error: (issue) => {

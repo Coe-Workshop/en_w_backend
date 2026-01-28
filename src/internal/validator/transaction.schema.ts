@@ -1,59 +1,58 @@
-import { relations } from "drizzle-orm";
-import {
-  integer,
-  pgEnum,
-  pgTable,
-  serial,
-  timestamp,
-  uuid,
-} from "drizzle-orm/pg-core";
-import { assets } from "./assets";
-import { users } from "./users";
-import { messages } from "./messages";
+import z from "zod";
 
-export const transactionStatus = pgEnum("transaction_status", [
-  "REJECT",
-  "RESERVE",
-  "APPROVE",
-]);
+export const CreateTransactionRequest = z
+  .object(
+    {
+      assetID: z
+        .string("กรุณาเลือกเลขครุภัณฑ์ของอุปกรณ์ที่ต้องการจอง")
+        .trim()
+        .min(1, "เลขครุภัณฑ์ห้ามว่าง")
+        .max(64, "ไม่พบเลขครุภัณฑ์ดังกล่าว"),
+      reserverID: z
+        .string("ต้องการ uuid ของผู้จอง")
+        .trim()
+        .length(36, "รูปแบบของ uuid ไม่ถูกต้อง"),
+      date: z
+        .string("กรุณาเลือกวันที่จอง")
+        .trim()
+        .pipe(
+          z.iso.date("ไม่มีวันที่ดังกล่าว หรือรูปแบบไม่ถูกต้อง (YYYY-MM-DD)"),
+        ),
+      startedAt: z
+        .string("กรุณาเลือกเวลาเริ่มใช้งานอุปกรณ์")
+        .trim()
+        .pipe(z.iso.time("ไม่มีเวลาดังกล่าว หรือรูปแบบไม่ถูกต้อง (HH:MM)")),
+      endedAt: z
+        .string("กรุณาเลือกเวลาสิ้นสุดการใช้งานอุปกรณ์")
+        .trim()
+        .pipe(z.iso.time("ไม่มีเวลาดังกล่าว หรือรูปแบบไม่ถูกต้อง (HH:MM)")),
+      message: z
+        .string({
+          error: (issue) =>
+            issue.input === undefined
+              ? "กรุณากรอกจุดประสงค์ของการจอง"
+              : "ข้อความต้องเป็นตัวอักษร",
+        })
+        .min(1, "ข้อความห้ามว่าง")
+        .max(1000, "ข้อความยาวเกินไป"),
+    },
+    {
+      error: (issue) => {
+        if (issue.input === undefined) {
+          return "กรุณากรอกข้อมูลเพื่อทำรายการจอง";
+        }
+      },
+    },
+  )
+  .refine((data) => data.endedAt > data.startedAt, {
+    error: "เวลาสิ้นสุดการจองต้องมากกว่าเวลาเริ่มต้นการจอง",
+  })
+  .transform((data) => ({
+    assetID: data.assetID,
+    reserverID: data.reserverID,
+    message: data.message,
+    startedAt: new Date(`${data.date}T${data.startedAt}:00Z`),
+    endedAt: new Date(`${data.date}T${data.endedAt}:00Z`),
+  }));
 
-export const transactions = pgTable("transactions", {
-  id: serial("id").primaryKey(),
-  asset_id: integer("asset_id").notNull(),
-  reserver_id: uuid("reserver_id").notNull(),
-  created_at: timestamp("created_at", { precision: 6, mode: "date" })
-    .defaultNow()
-    .notNull(),
-  approver_id: uuid("approver_id"),
-  status: transactionStatus("status").default("RESERVE").notNull(),
-  start_at: timestamp("start_at", { precision: 6, mode: "date" }).notNull(),
-  end_at: timestamp("start_at", { precision: 6, mode: "date" }).notNull(),
-});
-
-/*
- one transaction belong to one reserver, approver, asset_id
- but can has many messages
- */
-export const transactionsRelations = relations(
-  transactions,
-  ({ one, many }) => ({
-    reserver: one(users, {
-      fields: [transactions.reserver_id],
-      references: [users.id],
-      relationName: "reserver",
-    }),
-    approver: one(users, {
-      fields: [transactions.approver_id],
-      references: [users.id],
-      relationName: "approver",
-    }),
-    messages: many(messages),
-    assetId: one(assets, {
-      fields: [transactions.asset_id],
-      references: [assets.id],
-    }),
-  }),
-);
-
-export type Transaction = typeof transactions.$inferSelect;
-export type NewTransaction = typeof transactions.$inferInsert;
+export type CreateTransactionRequest = z.infer<typeof CreateTransactionRequest>;

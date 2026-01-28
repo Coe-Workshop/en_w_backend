@@ -17,6 +17,18 @@ export const transactionStatus = pgEnum("transaction_status", [
   "APPROVE",
 ]);
 
+export interface Transaction {
+  id: number;
+  assetID?: string;
+  reserverID: string;
+  approverID?: string | null;
+  status: transactionStatus;
+  createdAt: Date;
+  startedAt: Date;
+  endedAt: Date;
+  message?: string;
+}
+
 export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
   assetID: integer("asset_id")
@@ -25,13 +37,19 @@ export const transactions = pgTable("transactions", {
   reserverID: uuid("reserver_id")
     .notNull()
     .references(() => users.id),
-  createdAt: timestamp("create_at", { precision: 6, mode: "date" })
+  createdAt: timestamp("create_at", { mode: "date", withTimezone: false })
     .defaultNow()
     .notNull(),
   approverID: uuid("approver_id").references(() => users.id),
   status: transactionStatus("status").default("RESERVE").notNull(),
-  startedAt: timestamp("started_at", { precision: 6, mode: "date" }).notNull(),
-  endedAt: timestamp("ended_at", { precision: 6, mode: "date" }).notNull(),
+  startedAt: timestamp("started_at", {
+    mode: "date",
+    withTimezone: false,
+  }).notNull(),
+  endedAt: timestamp("ended_at", {
+    mode: "date",
+    withTimezone: false,
+  }).notNull(),
 });
 
 /*
@@ -59,5 +77,6 @@ export const transactionsRelations = relations(
   }),
 );
 
-export type Transaction = typeof transactions.$inferSelect;
+// export type Transaction = typeof transactions.$inferSelect;
 export type NewTransaction = typeof transactions.$inferInsert;
+export type transactionStatus = (typeof transactionStatus.enumValues)[number];

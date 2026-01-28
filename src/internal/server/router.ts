@@ -11,20 +11,27 @@ import makeAuthService from "@/pkg/auth/service";
 import { makeAssetRepository } from "@/pkg/asset/repository";
 import makeAssetService from "@/pkg/asset/service";
 import { makeAssetHandler } from "@/pkg/asset/handler";
+import makeTransactionRepository from "@/pkg/transaction/repository";
+import makeTransactionService from "@/pkg/transaction/service";
+import { makeTransactionHandler } from "@/pkg/transaction/handler";
 
 const setupRoutes = (app: Express, db: DB) => {
   const userRepository = makeUserRepository();
   const itemRepository = makeItemRepository();
   const assetRepository = makeAssetRepository();
+  const transactionRepository = makeTransactionRepository();
   const authService = makeAuthService(db, userRepository);
   const itemService = makeItemService(db, itemRepository);
   const assetService = makeAssetService(db, assetRepository);
+  const transactionService = makeTransactionService(db, transactionRepository);
   const authHandler = makeAuthHandler(authService);
   const itemHandler = makeItemHandler(itemService);
   const assetHandler = makeAssetHandler(assetService);
+  const transactionHandler = makeTransactionHandler(transactionService);
   app.use("/api/v1/auth", authHandler);
   app.use("/api/v1/items", itemHandler);
   app.use("/api/v1/assets", assetHandler);
+  app.use("/api/v1/transactions", transactionHandler);
 
   const userService = makeUserService(db, userRepository);
   const userHandler = makeUserHandler(userService);

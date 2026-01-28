@@ -50,6 +50,41 @@
       "when": 1767173785283,
       "tag": "0006_living_sabra",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1769526097043,
+      "tag": "0007_next_marvel_zombies",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1769539231168,
+      "tag": "0008_elite_champions",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1769539428597,
+      "tag": "0009_kind_lorna_dane",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1769620106751,
+      "tag": "0010_handy_skrulls",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1769622054569,
+      "tag": "0011_parallel_zeigeist",
+      "breakpoints": true
     }
   ]
 }
