@@ -17,11 +17,9 @@ export const makeTransactionHandler = (
 const transactionHandler = (transactionService: TransactionService) => ({
   createTransaction: async (req: Request, res: Response): Promise<Response> => {
     try {
-      console.log(req.body);
       const reqData: CreateTransactionRequest = CreateTransactionRequest.parse(
         req.body,
       );
-      console.log(reqData);
       const transaction = await transactionService.createTransaction(reqData);
 
       return res.status(HttpStatus.CREATED).json({
@@ -36,26 +34,36 @@ const transactionHandler = (transactionService: TransactionService) => ({
         });
       }
 
-      if (
-        err instanceof AppErr &&
-        err.code === HttpStatus.NOT_FOUND &&
-        err.message === "RECORD_NOT_FOUND"
-      ) {
-        return res.status(err.code).json({
-          success: false,
-          error: "ไม่พบเลขครุภัณฑ์ดังกล่าว",
-        });
-      }
+      if (err instanceof AppErr) {
+        if (
+          err.code === HttpStatus.NOT_FOUND &&
+          err.message === "RECORD_NOT_FOUND"
+        ) {
+          return res.status(err.code).json({
+            success: false,
+            error: "ไม่พบเลขครุภัณฑ์ดังกล่าว",
+          });
+        }
 
-      if (
-        err instanceof AppErr &&
-        err.code === HttpStatus.NOT_FOUND &&
-        err.message === "RESERVER_NOT_FOUND"
-      ) {
-        return res.status(err.code).json({
-          success: false,
-          error: "ไม่พบผู้จองดังกล่าว",
-        });
+        if (
+          err.code === HttpStatus.NOT_FOUND &&
+          err.message === "RESERVER_NOT_FOUND"
+        ) {
+          return res.status(err.code).json({
+            success: false,
+            error: "ไม่พบผู้จองดังกล่าว",
+          });
+        }
+
+        if (
+          err.code === HttpStatus.CONFLICT &&
+          err.message === "TIME_INTERVAL_NOT_VALID"
+        ) {
+          return res.status(err.code).json({
+            success: false,
+            error: "อุปกรณ์นี้ไม่ว่างในช่วงเวลาที่คุณเลือก กรุณาเลือกเวลาใหม่",
+          });
+        }
       }
 
       const er = err as Error;

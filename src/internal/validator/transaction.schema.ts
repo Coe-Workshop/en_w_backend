@@ -47,6 +47,14 @@ export const CreateTransactionRequest = z
   .refine((data) => data.endedAt > data.startedAt, {
     error: "เวลาสิ้นสุดการจองต้องมากกว่าเวลาเริ่มต้นการจอง",
   })
+  .refine(
+    (data) =>
+      new Date(data.date).setHours(0, 0, 0, 0) >=
+      new Date().setHours(0, 0, 0, 0),
+    {
+      error: "ไม่สามารถจองวันที่ในอดีตได้",
+    },
+  )
   .transform((data) => ({
     assetID: data.assetID,
     reserverID: data.reserverID,
