@@ -83,4 +83,5 @@ See `.env.example` for all required variables.
 ### **12.1 รัน Development Server**
 
 ```bash
-npm run dev
+bun run dev
+tes
