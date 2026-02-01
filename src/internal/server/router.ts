@@ -8,14 +8,16 @@ import makeUserHandler from "@/pkg/user/handler";
 import { Express } from "express";
 import makeAuthHandler from "@/pkg/auth/handler";
 import makeAuthService from "@/pkg/auth/service";
+import makeMiddleware from "../middleware/auth";
 
 const setupRoutes = (app: Express, db: DB) => {
   const userRepository = makeUserRepository();
   const itemRepository = makeItemRepository();
+  const middleware = makeMiddleware();
   const authService = makeAuthService(db, userRepository);
   const itemService = makeItemService(db, itemRepository);
   const authHandler = makeAuthHandler(authService);
-  const itemHandler = makeItemHandler(itemService);
+  const itemHandler = makeItemHandler(itemService, middleware);
   app.use("/api/v1/auth", authHandler);
   app.use("/api/v1/items", itemHandler);
 

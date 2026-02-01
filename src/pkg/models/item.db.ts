@@ -52,3 +52,4 @@ export type NewItem = typeof items.$inferInsert;
 export type Category = typeof categories.$inferSelect;
 export type NewCategory = typeof categories.$inferInsert;
 export type ItemCategory = (typeof itemCategory.enumValues)[number];
+

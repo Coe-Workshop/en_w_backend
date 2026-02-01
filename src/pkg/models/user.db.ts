@@ -12,20 +12,25 @@ import {
 } from "drizzle-orm/pg-core";
 import { messages } from "./message.db";
 import { transactions } from "./transaction.db";
+import { enumToPgEnum } from "@/utils/enumToPgEnum";
 
 export interface GoogleUser {
   googleId: string;
   email: string;
+  role: string;
 }
 
-export interface UserProfile {
+export interface TempUser {
   email: string;
-  firstName: string;
-  lastName: string;
+  role: string;
 }
 
-export const userRole = pgEnum("user_role", ["RESERVER", "ADMIN"]);
-export const UserRoleEnum = userRole.enumValues;
+export enum UserRole {
+  RESERVER = "RESERVER",
+  ADMIN = 'ADMIN',
+}
+
+export const userRole = pgEnum("user_role", enumToPgEnum(UserRole));
 
 export const users = pgTable(
   "users",
@@ -35,6 +40,7 @@ export const users = pgTable(
     lastName: text().notNull(),
     prefix: text().notNull(),
     email: text().notNull().unique(),
+    password: text(),
     isUniStudent: boolean().notNull(),
     faculty: text(),
     role: userRole().notNull(),
@@ -57,4 +63,3 @@ export const usersRelations = relations(users, ({ many }) => ({
 
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
-export type UserRole = (typeof userRole.enumValues)[number];

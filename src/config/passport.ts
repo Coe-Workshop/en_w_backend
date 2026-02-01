@@ -5,10 +5,15 @@ import {
   Profile,
   VerifyCallback,
 } from "passport-google-oauth20";
-import { GoogleUser } from "@/pkg/models";
+import { GoogleUser, TempUser, UserRole } from "@/pkg/models";
+import makeUserService from "@/pkg/user/service";
+import { db } from "./drizzle";
+import makeUserRepository from "@/pkg/user/repository";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
+const userRepository = makeUserRepository();
+const userService = makeUserService(db, userRepository);
 
 passport.use(
   new GoogleStrategy(
@@ -25,10 +30,14 @@ passport.use(
     ) => {
       const email = profile.emails?.[0].value || "";
 
-      const user: GoogleUser = {
-        googleId: profile.id,
-        email: email,
-      };
+      let user: TempUser = await userService.getUserByEmail(email);
+      if (!user) {
+	user = {
+	  email: email,
+	  role: UserRole.RESERVER,
+	};
+      }
+
       console.log(`User logged in: ${email}`);
       return done(null, user);
     },
@@ -36,20 +45,11 @@ passport.use(
 );
 
 passport.serializeUser((user: Express.User, done) => {
-  const googleUser = user as GoogleUser;
-  done(null, {
-    googleId: googleUser.googleId,
-    email: googleUser.email,
-  });
+  done(null, user);
 });
 
 passport.deserializeUser(async (sessionUser: any, done) => {
-  const user: GoogleUser = {
-    googleId: sessionUser.googleId,
-    email: sessionUser.email,
-  };
-
-  done(null, user);
+  done(null, sessionUser);
 });
 
 export default passport;

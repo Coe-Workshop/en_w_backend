@@ -1,13 +1,30 @@
 import { DB } from "@/config/drizzle";
-import { UserRepository } from "../domain/user";
 import { AuthService } from "../domain/auth";
 import { AppErr } from "@/utils/appErr";
 import HttpStatus from "http-status";
+import { UserRepository } from "../domain/user";
 
 const makeAuthService = (
   db: DB,
-  userRepository: UserRepository,
+  userRepository: UserRepository
 ): AuthService => ({
+  loginEmailPassword: async (req) => {
+    return await db.transaction(async (tx) => {
+      try {
+	const { email } = req;
+	const user = await userRepository.getUser(tx, "email", email);
+	if (!user.password) throw new AppErr(HttpStatus.UNAUTHORIZED, "USER_DOES_NOT_HAVE_CREDENTIALS");
+	const isCorrectPassword = await userRepository.checkPassword(user.password, req.password);
+	if (!isCorrectPassword) {
+	  throw new AppErr(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS");
+	}
+	return user;
+      } catch (err) {
+	throw err;
+      }
+    })
+  },
+		  
   register: async (req) => {
     return await db.transaction(async (tx) => {
       return await userRepository.createUser(tx, req);
@@ -19,14 +36,8 @@ const makeAuthService = (
         const user = await userRepository.getUser(tx, "email", email);
         return !!user;
       } catch (err) {
-        if (
-          err instanceof AppErr &&
-          err.code === HttpStatus.NOT_FOUND &&
-          err.message === "RECORD_NOT_FOUND"
-        ) {
-          return false;
-        }
-        return true;
+	// TODO: should I just throw?
+        return false;
       }
     });
   },
