@@ -20,10 +20,14 @@ export const assets = pgTable("assets", {
     .references(() => items.id),
 });
 
-//one asset CAN belong to many item
+//one asset belong to one item
+//one asset_id CAN belong to many item
 //one asset can be in many transactions
-export const assetsRelations = relations(assets, ({ many }) => ({
-  items: many(items),
+export const assetsRelations = relations(assets, ({ one, many }) => ({
+  item: one(items, {
+    fields: [assets.itemID],
+    references: [items.id],
+  }),
   transactions: many(transactions),
 }));
 
