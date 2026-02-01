@@ -30,8 +30,11 @@ passport.use(
     ) => {
       const email = profile.emails?.[0].value || "";
 
-      let user: TempUser = await userService.getUserByEmail(email);
-      if (!user) {
+      let user: TempUser;
+
+      try {
+	user = await userService.getUserByEmail(email);
+      } catch (err) {
 	user = {
 	  email: email,
 	  role: UserRole.RESERVER,

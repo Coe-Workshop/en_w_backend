@@ -38,10 +38,10 @@ const authHandler = (authService: AuthService) => ({
     const user = req.user as GoogleUser;
     const isRegistered = await authService.isRegistered(user.email);
     if (user && !isRegistered) {
-      return res.redirect(`${frontendUrl}/register`);
+      return res.redirect(`${frontendUrl}/on-boarding`);
     }
 
-    res.redirect(frontendUrl);
+    res.redirect(`${frontendUrl}/landing`);
   },
 
   // TODO: refactor
@@ -82,8 +82,8 @@ const authHandler = (authService: AuthService) => ({
 
       const user = await authService.loginEmailPassword(reqData.data);
       return res.status(HttpStatus.OK).json({
-	success: true,
-	data: user,
+        success: true,
+        data: user,
       });
     } catch (err) {
       if (
@@ -101,7 +101,7 @@ const authHandler = (authService: AuthService) => ({
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false,
         message:
-	"ไม่สามารถเข้าสู่ระบบได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
+          "ไม่สามารถเข้าสู่ระบบได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
         error: er.message,
       });
     }
@@ -129,7 +129,6 @@ const authHandler = (authService: AuthService) => ({
         user,
       });
     } catch (err) {
-      console.log(err)
       if (err instanceof z.ZodError) {
         return res.status(HttpStatus.BAD_REQUEST).json({
           success: false,
