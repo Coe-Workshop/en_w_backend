@@ -11,6 +11,12 @@ const makeUserService = (
     });
   },
 
+  getUserByEmail: async (email) => {
+    return await db.transaction(async (tx) => {
+      return await userRepository.getUser(tx, "email", email);
+    });
+  },
+
   createUser: async (req) => {
     return await db.transaction(async (tx) => {
       return await userRepository.createUser(tx, req);
