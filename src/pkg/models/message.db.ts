@@ -4,10 +4,14 @@ import { users } from "./user.db";
 import { transactions } from "./transaction.db";
 
 export const messages = pgTable("messages", {
-  id: serial().primaryKey(),
-  userID: uuid().notNull(),
-  detail: text(),
-  transactionID: integer().notNull(),
+  id: serial("id").primaryKey(),
+  userID: uuid("user_id")
+    .notNull()
+    .references(() => users.id),
+  detail: text("detail"),
+  transactionID: integer("transaction_id")
+    .notNull()
+    .references(() => transactions.id),
 });
 
 //one message belong to one user and transaction

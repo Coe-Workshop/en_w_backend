@@ -29,6 +29,27 @@
       "when": 1765013533561,
       "tag": "0003_flat_scorpion",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1766305096282,
+      "tag": "0004_warm_sentinels",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1767018994358,
+      "tag": "0005_premium_gorilla_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1767173785283,
+      "tag": "0006_living_sabra",
+      "breakpoints": true
     }
   ]
 }
