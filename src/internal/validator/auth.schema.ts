@@ -14,6 +14,7 @@ export const RegisterRequest = z.object({
   faculty: z.string().trim().optional(),
   role: z.enum(UserRole),
   phone: z.string().trim().length(10),
+  password: z.string().min(8).trim().optional(),
 });
 
 export type LoginRequest = z.infer<typeof LoginRequest>;

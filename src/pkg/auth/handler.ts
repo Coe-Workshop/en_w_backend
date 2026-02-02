@@ -80,10 +80,10 @@ const authHandler = (authService: AuthService) => ({
         });
       }
 
-      const user = await authService.loginEmailPassword(reqData.data);
+      await authService.loginEmailPassword(reqData.data);
       return res.status(HttpStatus.OK).json({
         success: true,
-        data: user,
+        messages: "เข้าสู่ระบบสำเร็จ"
       });
     } catch (err) {
       if (

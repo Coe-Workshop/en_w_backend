@@ -1,5 +1,5 @@
 import { DBTransaction } from "@/config/drizzle";
-import { NewUser, User } from "../models";
+import { NewUser, User, UserWithoutPassword } from "../models";
 
 export interface UserRepository {
   getUser: (db: DBTransaction, column: string, value: any) => Promise<User>;
@@ -10,8 +10,8 @@ export interface UserRepository {
 }
 
 export interface UserService {
-  getUserByID: (id: string) => Promise<User>;
-  getUserByEmail: (email: string) => Promise<User>;
+  getUserByID: (id: string) => Promise<UserWithoutPassword>;
+  getUserByEmail: (email: string) => Promise<UserWithoutPassword>;
   createUser: (req: NewUser) => Promise<User>;
   deleteUserByID: (id: string) => Promise<User>;
   updateUser: (data: Partial<User>) => Promise<User>;
