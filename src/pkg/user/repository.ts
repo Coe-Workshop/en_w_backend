@@ -97,8 +97,6 @@ const makeUserRepository = (): UserRepository => ({
   },
   checkPassword: async (hashedPassword, password) => {
     if (!password) return false;
-    console.log(hashedPassword)
-    console.log(password)
     return bcrypt.compare(password, hashedPassword);
   }
 });
