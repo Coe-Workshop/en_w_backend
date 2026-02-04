@@ -41,6 +41,15 @@ const assetHandler = (assetService: AssetService) => ({
     try {
       const reqData: CreateAssetRequest = CreateAssetRequest.parse(req.body);
       const itemID = reqData.itemID;
+
+      const setOfAssetID = new Set(reqData.assetID);
+      if (setOfAssetID.size !== reqData.assetID.length) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false,
+          error: "กรุณาอย่ากรอกเลขครุภัณฑ์ซ้ำกัน",
+        });
+      }
+
       const asset = await assetService.createAsset(itemID, reqData);
       return res.status(HttpStatus.CREATED).json({
         success: true,
@@ -70,7 +79,7 @@ const assetHandler = (assetService: AssetService) => ({
         ) {
           return res.status(err.code).json({
             success: false,
-            error: "อุปกรณ์ดังกล่าวมีเลขครุภัณฑ์ที่ระบุแล้ว",
+            error: "อุปกรณ์ดังกล่าวมีบางเลขครุภัณฑ์ที่ระบุแล้ว",
           });
         }
       }

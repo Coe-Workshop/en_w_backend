@@ -5,11 +5,21 @@ import { transactions } from "./transaction.db";
 
 export interface Asset {
   id: number;
-  assetID: string;
+  assetID: string[] | string;
   item: {
     id: number;
     name: string;
   } | null;
+}
+
+export interface NewAsset {
+  itemID: number;
+  assetID: string[];
+}
+
+export interface insertAsset {
+  itemID: number;
+  assetID: string;
 }
 
 export const assets = pgTable("assets", {
@@ -32,5 +42,5 @@ export const assetsRelations = relations(assets, ({ one, many }) => ({
 }));
 
 // export type Asset = typeof assets.$inferSelect;
-export type NewAsset = typeof assets.$inferInsert;
+// export type NewAsset = typeof assets.$inferInsert;
 export type delAsset = typeof assets.$inferInsert;

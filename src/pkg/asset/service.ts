@@ -16,7 +16,13 @@ export const makeAssetService = (
         itemID: itemID,
         assetID: reqData.assetID,
       };
-      return await assetRepository.createAsset(tx, asset);
+      const assetWithItemID = reqData.assetID.map((data) => {
+        return {
+          itemID: reqData.itemID,
+          assetID: data as string,
+        };
+      });
+      return await assetRepository.createAsset(tx, asset, assetWithItemID);
     });
   },
 
