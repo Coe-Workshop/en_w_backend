@@ -5,15 +5,22 @@ import {
   Profile,
   VerifyCallback,
 } from "passport-google-oauth20";
-import { GoogleUser, TempUser, UserRole } from "@/pkg/models";
+import {
+  Strategy as LocalStrategy,
+} from "passport-local";
+import { TempUser, UserRole } from "@/pkg/models";
 import makeUserService from "@/pkg/user/service";
 import { db } from "./drizzle";
 import makeUserRepository from "@/pkg/user/repository";
+import makeAuthService from "@/pkg/auth/service";
+import { AppErr } from "@/utils/appErr";
+import HttpStatus from "http-status";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
 const userRepository = makeUserRepository();
 const userService = makeUserService(db, userRepository);
+const authService = makeAuthService(db, userRepository);
 
 passport.use(
   new GoogleStrategy(
@@ -33,12 +40,12 @@ passport.use(
       let user: TempUser;
 
       try {
-	user = await userService.getUserByEmail(email);
+        user = await userService.getUserByEmail(email);
       } catch (err) {
-	user = {
-	  email: email,
-	  role: UserRole.RESERVER,
-	};
+        user = {
+          email: email,
+          role: UserRole.RESERVER,
+        };
       }
 
       console.log(`User logged in: ${email}`);
@@ -46,6 +53,18 @@ passport.use(
     },
   ),
 );
+
+passport.use(new LocalStrategy(
+ {usernameField:"email", passwordField:"password"},
+  async (email, password, done) => {
+    try {
+      const user = await authService.loginEmailPassword({ email, password })
+      return done(null, user)
+    } catch (err) {
+      return done(err)
+    };
+  }
+));
 
 passport.serializeUser((user: Express.User, done) => {
   done(null, user);
