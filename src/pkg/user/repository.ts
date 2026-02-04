@@ -56,8 +56,8 @@ const makeUserRepository = (): UserRepository => ({
         .where(eq(users.email, String(data.email)));
       const conditions = [
         eq(users.email, String(data.email)),
-        eq(users.first_name, String(data.first_name)),
-        eq(users.last_name, String(data.last_name)),
+        eq(users.firstName, String(data.firstName)),
+        eq(users.lastName, String(data.lastName)),
         eq(users.faculty, String(data.faculty)),
         eq(users.phone, String(data.phone)),
       ];
