@@ -1,4 +1,4 @@
-import { eq, and, ilike } from "drizzle-orm";
+import { eq, and, ilike, inArray } from "drizzle-orm";
 import { DatabaseError } from "pg";
 import { DrizzleQueryError } from "drizzle-orm/errors";
 import HttpStatus from "http-status";
@@ -24,14 +24,14 @@ export const makeAssetRepository = (): AssetRepository => ({
     return result;
   },
 
-  createAsset: async (db, asset) => {
+  createAsset: async (db, asset, assetWithItemID) => {
     try {
       const isAlreadyExist = await db
         .select()
         .from(assets)
         .where(
           and(
-            ilike(assets.assetID, asset.assetID),
+            inArray(assets.assetID, asset.assetID as string[]),
             eq(assets.itemID, asset.itemID),
           ),
         );
@@ -39,15 +39,21 @@ export const makeAssetRepository = (): AssetRepository => ({
         throw new AppErr(HttpStatus.CONFLICT, "ASSET_ALREADY_EXIST");
       }
 
-      const result = await db.insert(assets).values(asset).returning();
+      const result = await db
+        .insert(assets)
+        .values(assetWithItemID)
+        .returning();
+
+      const arrayOfAssetID = result.map((data) => data.assetID);
 
       const getItemName = await db
         .select({ name: items.name })
         .from(items)
         .where(eq(items.id, result[0].itemID));
+
       const data = {
         id: result[0].id,
-        assetID: result[0].assetID,
+        assetID: arrayOfAssetID,
         item: {
           id: result[0].itemID,
           name: getItemName[0].name,
