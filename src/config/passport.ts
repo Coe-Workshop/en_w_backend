@@ -5,10 +5,22 @@ import {
   Profile,
   VerifyCallback,
 } from "passport-google-oauth20";
-import { GoogleUser } from "@/pkg/models";
+import {
+  Strategy as LocalStrategy,
+} from "passport-local";
+import { TempUser, UserRole } from "@/pkg/models";
+import makeUserService from "@/pkg/user/service";
+import { db } from "./drizzle";
+import makeUserRepository from "@/pkg/user/repository";
+import makeAuthService from "@/pkg/auth/service";
+import { AppErr } from "@/utils/appErr";
+import HttpStatus from "http-status";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;
+const userRepository = makeUserRepository();
+const userService = makeUserService(db, userRepository);
+const authService = makeAuthService(db, userRepository);
 
 passport.use(
   new GoogleStrategy(
@@ -25,31 +37,41 @@ passport.use(
     ) => {
       const email = profile.emails?.[0].value || "";
 
-      const user: GoogleUser = {
-        googleId: profile.id,
-        email: email,
-      };
+      let user: TempUser;
+
+      try {
+        user = await userService.getUserByEmail(email);
+      } catch (err) {
+        user = {
+          email: email,
+          role: UserRole.RESERVER,
+        };
+      }
+
       console.log(`User logged in: ${email}`);
       return done(null, user);
     },
   ),
 );
 
+passport.use(new LocalStrategy(
+ {usernameField:"email", passwordField:"password"},
+  async (email, password, done) => {
+    try {
+      const user = await authService.loginEmailPassword({ email, password })
+      return done(null, user)
+    } catch (err) {
+      return done(err)
+    };
+  }
+));
+
 passport.serializeUser((user: Express.User, done) => {
-  const googleUser = user as GoogleUser;
-  done(null, {
-    googleId: googleUser.googleId,
-    email: googleUser.email,
-  });
+  done(null, user);
 });
 
 passport.deserializeUser(async (sessionUser: any, done) => {
-  const user: GoogleUser = {
-    googleId: sessionUser.googleId,
-    email: sessionUser.email,
-  };
-
-  done(null, user);
+  done(null, sessionUser);
 });
 
 export default passport;

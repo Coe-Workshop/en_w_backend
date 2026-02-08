@@ -1,11 +1,11 @@
-import { Request, Response, Router } from "express";
-import passport from "passport";
-import { GoogleUser } from "../models";
-import HttpStatus from "http-status";
+import { LoginRequest, RegisterRequest } from "@/internal/validator/auth.schema";
 import { AppErr } from "@/utils/appErr";
+import { Request, Response, Router } from "express";
+import HttpStatus from "http-status";
+import passport from "passport";
 import z from "zod";
 import { AuthService } from "../domain/auth";
-import { RegisterRequest } from "@/internal/validator/auth.schema";
+import { GoogleUser } from "../models";
 
 const makeAuthHandler = (authService: AuthService) => {
   const router = Router();
@@ -27,6 +27,7 @@ const makeAuthHandler = (authService: AuthService) => {
   );
 
   router.post("/logout", handler.logout);
+  router.post("/login", handler.login);
   router.post("/register", handler.register);
   return router;
 };
@@ -37,10 +38,10 @@ const authHandler = (authService: AuthService) => ({
     const user = req.user as GoogleUser;
     const isRegistered = await authService.isRegistered(user.email);
     if (user && !isRegistered) {
-      return res.redirect(`${frontendUrl}/register`);
+      return res.redirect(`${frontendUrl}/on-boarding`);
     }
 
-    res.redirect(frontendUrl);
+    res.redirect(`${frontendUrl}/landing`);
   },
 
   // TODO: refactor
@@ -69,6 +70,43 @@ const authHandler = (authService: AuthService) => ({
     });
   },
 
+  login: async (req: Request, res: Response) => {
+    try {
+      const reqData = LoginRequest.safeParse(req.body);
+      if (!reqData.success) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false,
+          error: reqData.error.issues[0].message,
+        });
+      }
+
+      await authService.loginEmailPassword(reqData.data);
+      return res.status(HttpStatus.OK).json({
+        success: true,
+        messages: "เข้าสู่ระบบสำเร็จ"
+      });
+    } catch (err) {
+      if (
+        err instanceof AppErr &&
+        err.code === HttpStatus.NOT_FOUND &&
+        err.message === "RECORD_NOT_FOUND"
+      ) {
+        return res.status(HttpStatus.NOT_FOUND).json({
+          success: false,
+          error: "อีเมล หรือ รหัสผ่าน ไม่ถูกต้อง",
+        });
+      }
+
+      const er = err as Error;
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message:
+          "ไม่สามารถเข้าสู่ระบบได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
+        error: er.message,
+      });
+    }
+  },
+
   register: async (req: Request, res: Response) => {
     if (!req.isAuthenticated()) {
       return res.status(HttpStatus.UNAUTHORIZED).json({
@@ -77,9 +115,8 @@ const authHandler = (authService: AuthService) => ({
       });
     }
 
-    const reqData: RegisterRequest = RegisterRequest.parse(req.body);
-
     try {
+      const reqData: RegisterRequest = RegisterRequest.parse(req.body);
       const googleUser = req.user as GoogleUser;
       const reqUser = {
         email: googleUser.email,

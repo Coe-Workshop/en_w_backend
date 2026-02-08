@@ -8,8 +8,9 @@ import makeUserHandler from "@/pkg/user/handler";
 import { Express } from "express";
 import makeAuthHandler from "@/pkg/auth/handler";
 import makeAuthService from "@/pkg/auth/service";
-import { makeAssetRepository } from "@/pkg/asset/repository";
+import makeMiddleware from "../middleware/auth";
 import makeAssetService from "@/pkg/asset/service";
+import { makeAssetRepository } from "@/pkg/asset/repository";
 import { makeAssetHandler } from "@/pkg/asset/handler";
 import makeTransactionRepository from "@/pkg/transaction/repository";
 import makeTransactionService from "@/pkg/transaction/service";
@@ -18,6 +19,7 @@ import { makeTransactionHandler } from "@/pkg/transaction/handler";
 const setupRoutes = (app: Express, db: DB) => {
   const userRepository = makeUserRepository();
   const itemRepository = makeItemRepository();
+  const middleware = makeMiddleware();
   const assetRepository = makeAssetRepository();
   const transactionRepository = makeTransactionRepository();
   const authService = makeAuthService(db, userRepository);
@@ -25,7 +27,7 @@ const setupRoutes = (app: Express, db: DB) => {
   const assetService = makeAssetService(db, assetRepository);
   const transactionService = makeTransactionService(db, transactionRepository);
   const authHandler = makeAuthHandler(authService);
-  const itemHandler = makeItemHandler(itemService);
+  const itemHandler = makeItemHandler(itemService, middleware);
   const assetHandler = makeAssetHandler(assetService);
   const transactionHandler = makeTransactionHandler(transactionService);
   app.use("/api/v1/auth", authHandler);
