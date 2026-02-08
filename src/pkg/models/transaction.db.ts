@@ -10,6 +10,7 @@ import {
 import { users } from "./user.db";
 import { messages } from "./message.db";
 import { assets } from "./asset.db";
+import { ItemCategory, items } from "./item.db";
 
 export const transactionStatus = pgEnum("transaction_status", [
   "REJECT",
@@ -19,7 +20,8 @@ export const transactionStatus = pgEnum("transaction_status", [
 
 export interface Transaction {
   id: number;
-  assetID?: string;
+  assetID: number;
+  itemID: number;
   reserverID: string;
   approverID?: string | null;
   status: transactionStatus;
@@ -29,11 +31,66 @@ export interface Transaction {
   message?: string;
 }
 
+export type AdminTransactions = {
+  itemName: string;
+  assetID: string;
+  startedAt: Date;
+  endedAt: Date;
+  status: transactionStatus;
+};
+export interface GetAllTransactionsByDate {
+  user: {
+    phone: string;
+    profileUrl?: string; // idk wa bro
+    userName: string;
+  } | null;
+  adminTransactions: AdminTransactions[];
+}
+
+export type AssetsStatus = {
+  user: {
+    phone: string;
+    userName: string;
+    profileUrl?: string; // idk yet
+  };
+  assetID: string;
+  transactions: {
+    status: transactionStatus;
+    startedAt: Date;
+    endedAt: Date;
+    message: string;
+  };
+};
+
+export interface GetAllTransactionsByItem {
+  itemName: string | null;
+  description: string | null;
+  categoryName: ItemCategory | null;
+  imageUrl: string | null;
+  assets: AssetsStatus[];
+}
+
+export type UserTransactions = {
+  itemName: string;
+  assetID: string;
+  startedAt: Date;
+  endedAt: Date;
+  status: transactionStatus;
+  message: string;
+};
+export interface GetAllTransactionsByUser {
+  startTime: Date;
+  userTransactions: UserTransactions[];
+}
+
 export const transactions = pgTable("transactions", {
   id: serial("id").primaryKey(),
   assetID: integer("asset_id")
     .notNull()
     .references(() => assets.id),
+  itemID: integer("item_id")
+    .notNull()
+    .references(() => items.id),
   reserverID: uuid("reserver_id")
     .notNull()
     .references(() => users.id),
@@ -53,9 +110,9 @@ export const transactions = pgTable("transactions", {
 });
 
 /*
- one transaction belong to one reserver, approver, asset_id
- but can has many messages
- */
+   one transaction belong to one reserver, approver, asset_id
+   but can has many messages
+   */
 export const transactionsRelations = relations(
   transactions,
   ({ one, many }) => ({
@@ -73,6 +130,10 @@ export const transactionsRelations = relations(
     assetId: one(assets, {
       fields: [transactions.assetID],
       references: [assets.id],
+    }),
+    itemID: one(items, {
+      fields: [transactions.itemID],
+      references: [items.id],
     }),
   }),
 );

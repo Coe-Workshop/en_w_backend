@@ -4,11 +4,11 @@ import { items } from "./item.db";
 import { transactions } from "./transaction.db";
 
 export interface Asset {
-  id: number;
+  id: number | number[];
   assetID: string[] | string;
   item: {
     id: number;
-    name: string;
+    name: string | null;
   } | null;
 }
 
@@ -17,26 +17,43 @@ export interface NewAsset {
   assetID: string[];
 }
 
-export interface insertAsset {
+export interface delAsset {
   itemID: number;
   assetID: string;
 }
 
 export const assets = pgTable("assets", {
   id: serial("id").primaryKey(),
-  assetID: text("asset_id").notNull(),
+  assetID: text("asset_id").notNull().unique(),
+});
+
+export const assetsToItems = pgTable("assets_to_items", {
+  assetID: integer("asset_id")
+    .notNull()
+    .references(() => assets.id, { onDelete: "cascade" }),
   itemID: integer("item_id")
     .notNull()
     .references(() => items.id),
 });
 
+export const assetsToItemsRelations = relations(assetsToItems, ({ one }) => ({
+  asset: one(assets, {
+    fields: [assetsToItems.assetID],
+    references: [assets.id],
+  }),
+  item: one(items, {
+    fields: [assetsToItems.itemID],
+    references: [items.id],
+  }),
+}));
+
 //one asset CAN belong to many item
 //one asset can be in many transactions
 export const assetsRelations = relations(assets, ({ many }) => ({
-  items: many(items),
+  items: many(assetsToItems),
   transactions: many(transactions),
 }));
 
 // export type Asset = typeof assets.$inferSelect;
 // export type NewAsset = typeof assets.$inferInsert;
-export type delAsset = typeof assets.$inferInsert;
+// export type delAsset = typeof assets.$inferInsert;

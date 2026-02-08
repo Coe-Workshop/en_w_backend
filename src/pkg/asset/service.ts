@@ -10,29 +10,16 @@ export const makeAssetService = (
       return await assetRepository.getAllAssets(tx);
     });
   },
-  createAsset: async (itemID, reqData) => {
+
+  createAsset: async (reqData) => {
     return await db.transaction(async (tx) => {
-      const asset = {
-        itemID: itemID,
-        assetID: reqData.assetID,
-      };
-      const assetWithItemID = reqData.assetID.map((data) => {
-        return {
-          itemID: reqData.itemID,
-          assetID: data as string,
-        };
-      });
-      return await assetRepository.createAsset(tx, asset, assetWithItemID);
+      return await assetRepository.createAsset(tx, reqData);
     });
   },
 
-  deleteAsset: async (itemID, reqData) => {
+  deleteAsset: async (reqData) => {
     return await db.transaction(async (tx) => {
-      const asset = {
-        itemID: itemID,
-        assetID: reqData.assetID,
-      };
-      await assetRepository.deleteAsset(tx, asset);
+      await assetRepository.deleteAsset(tx, reqData);
     });
   },
 });
