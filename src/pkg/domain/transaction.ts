@@ -18,7 +18,7 @@ export interface TransactionService {
   getAllTransactionsByUser: (
     req: GetAllTransactionsByUserRequest,
     page: number,
-  ) => Promise<GetAllTransactionsByUser[]>;
+  ) => Promise<GetAllTransactionsByUser>;
   getAllTransactionsByItem: (id: number) => Promise<GetAllTransactionsByItem[]>;
   getAllTransactionsByDate: (
     req: GetAllTransactionsByDateRequest,
@@ -31,7 +31,7 @@ export interface TransactionRepository {
     db: DBTransaction,
     id: string,
     page: number,
-  ) => Promise<GetAllTransactionsByUser[]>;
+  ) => Promise<GetAllTransactionsByUser>;
   getAllTransactionsByItem: (
     db: DBTransaction,
     id: number,

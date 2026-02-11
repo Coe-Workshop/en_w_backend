@@ -42,6 +42,7 @@ export interface GetAllTransactionsByDate {
   user: {
     phone: string;
     userName: string;
+    profileUrl?: string;
   } | null;
   adminTransactions: AdminTransactions[];
 }
@@ -56,6 +57,7 @@ export type AssetsStatus = {
     user: {
       phone: string;
       userName: string;
+      profileUrl?: string;
     };
   };
 };
@@ -77,8 +79,15 @@ export type UserTransactions = {
   message: string;
 };
 export interface GetAllTransactionsByUser {
-  startTime: Date;
-  userTransactions: UserTransactions[];
+  user: {
+    phone: string;
+    userName: string;
+    faculty: string | null;
+  };
+  transactions: {
+    startTime: Date;
+    userTransactions: UserTransactions[];
+  }[];
 }
 
 export const transactions = pgTable("transactions", {

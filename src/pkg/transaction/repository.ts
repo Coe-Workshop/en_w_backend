@@ -81,12 +81,20 @@ export const makeTransactionRepository = (): TransactionRepository => ({
   },
 
   getAllTransactionsByUser: async (db, userID, page) => {
-    const isExist = await db.query.users.findFirst({
-      where: eq(users.id, userID),
-    });
-    if (!isExist) {
+    const userQuery = await db
+      .select({
+        phone: users.phone,
+        userName: sql<string>`${users.firstName} || ' ' || ${users.lastName}`,
+        faculty: users.faculty,
+      })
+      .from(users)
+      .where(eq(users.id, userID))
+      .limit(1);
+
+    if (userQuery.length === 0) {
       throw new AppErr(HttpStatus.NOT_FOUND, "USER_NOT_FOUND");
     }
+
     const result = await db
       .select({
         startTime: sql<Date>`${transactions.startedAt}::date`,
@@ -96,7 +104,8 @@ export const makeTransactionRepository = (): TransactionRepository => ({
           'assetID', ${assets.assetID},
           'startedAt', ${transactions.startedAt},
           'endedAt', ${transactions.endedAt},
-          'status', ${transactions.status}
+          'status', ${transactions.status},
+          'message', ${messages.detail}
         ) ORDER BY ${transactions.startedAt} DESC
       )`,
       })
@@ -110,7 +119,10 @@ export const makeTransactionRepository = (): TransactionRepository => ({
       .limit(10)
       .offset((page - 1) * 10);
 
-    return result;
+    return {
+      user: userQuery[0],
+      transactions: result,
+    };
   },
 
   getAllTransactionsByDate: async (db, date, page) => {
