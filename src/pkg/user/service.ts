@@ -6,9 +6,19 @@ const makeUserService = (
   userRepository: UserRepository,
 ): UserService => ({
   getUserByID: async (id) => {
-    return await db.transaction(async (tx) => {
+    const { password, ...userWithoutPass }  = await db.transaction(async (tx) => {
       return await userRepository.getUser(tx, "id", id);
     });
+
+    return userWithoutPass;
+  },
+
+  getUserByEmail: async (email) => {
+    const { password, ...userWithoutPass} = await db.transaction(async (tx) => {
+      return await userRepository.getUser(tx, "email", email);
+    });
+
+    return userWithoutPass;
   },
 
   createUser: async (req) => {
