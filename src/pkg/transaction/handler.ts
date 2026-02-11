@@ -34,9 +34,6 @@ export const makeTransactionHandler = (
       error: "ไม่พบ filter ที่คุณระบุ",
     });
   });
-  // router.get("/", handler.getAllTransactionsByDate);
-  // router.get("/?filter=item?page=number", handler.getAllTransactionsByItem);
-  // router.get("/user/:id", handler.getAllTransactionsByUser);
   return router;
 };
 
@@ -95,7 +92,7 @@ const transactionHandler = (transactionService: TransactionService) => ({
       const result = await transactionService.getAllTransactionsByItem(reqData);
       return res.status(HttpStatus.OK).json({
         success: true,
-        data: result,
+        data: result[0],
       });
     } catch (err) {
       const error = err as Error;

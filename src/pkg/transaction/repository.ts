@@ -1,4 +1,4 @@
-import { and, eq, gt, lt, sql } from "drizzle-orm";
+import { and, desc, eq, gt, lt, max, sql } from "drizzle-orm";
 import { DatabaseError } from "pg";
 import { DrizzleQueryError } from "drizzle-orm/errors";
 import HttpStatus from "http-status";
@@ -6,6 +6,7 @@ import {
   AdminTransactions,
   assets,
   AssetsStatus,
+  assetsToItems,
   categories,
   items,
   messages,
@@ -31,25 +32,50 @@ export const makeTransactionRepository = (): TransactionRepository => ({
         description: items.description,
         categoryName: categories.name,
         imageUrl: items.imageUrl,
-        assets: sql<AssetsStatus[]>`jsonb_agg(
+        assets: sql<AssetsStatus[]>`jsonb_agg(json_build_object(
+        'assetID', ${assets.assetID},
+        'transactions', COALESCE((SELECT jsonb_agg(
           json_build_object(
-            'assetID', ${assets.assetID},
-            'transactions', json_build_object(
-              'status', ${transactions.status},
-              'startedAt', ${transactions.startedAt},
-              'endedAt', ${transactions.endedAt},
-              'message', ${messages.detail}
+            'startedAt', transactions.startedAt,
+            'endedAt', transactions.endedAt,
+            'message', transactions.detail,
+            'status', transactions.status,
+            'user', json_build_object(
+              'phone',  transactions.phone,
+              'userName', transactions.firstName || ' ' || transactions.lastName
             )
           )
-        )`,
+          ORDER BY transactions.startedAt DESC
+        )
+        FROM 
+        (
+          SELECT
+          ${transactions.startedAt} AS startedAt,
+          ${transactions.endedAt} AS endedAt,
+          ${transactions.status} AS status,
+          ${messages.detail} AS detail,
+          ${users.phone} AS phone,
+          ${users.firstName} AS firstName,
+          ${users.lastName} AS lastName
+          FROM ${transactions}
+          LEFT JOIN ${messages} ON ${messages.transactionID} = ${transactions.id}
+          LEFT JOIN ${users} ON ${users.id} = ${transactions.reserverID}
+          WHERE ${transactions.assetID} = ${assets.id} AND ${transactions.status} = 'APPROVE'
+          ORDER BY ${transactions.startedAt} DESC
+          LIMIT 10
+        ) 
+        AS transactions
+        ),
+          '[]'::jsonb
+        )
+      )
+    )`,
       })
-      .from(transactions)
-      .leftJoin(assets, eq(assets.id, transactions.assetID))
-      .leftJoin(items, eq(items.id, transactions.itemID))
+      .from(items)
+      .leftJoin(assetsToItems, eq(assetsToItems.itemID, items.id))
+      .leftJoin(assets, eq(assets.id, assetsToItems.assetID))
       .leftJoin(categories, eq(items.categoryID, categories.id))
-      .leftJoin(users, eq(transactions.reserverID, users.id))
-      .leftJoin(messages, eq(transactions.id, messages.transactionID))
-      .where(eq(transactions.itemID, itemID))
+      .where(eq(items.id, itemID))
       .groupBy(items.name, items.description, categories.name, items.imageUrl);
     return result;
   },
@@ -71,7 +97,7 @@ export const makeTransactionRepository = (): TransactionRepository => ({
           'startedAt', ${transactions.startedAt},
           'endedAt', ${transactions.endedAt},
           'status', ${transactions.status}
-        )
+        ) ORDER BY ${transactions.startedAt} DESC
       )`,
       })
       .from(transactions)
@@ -80,7 +106,7 @@ export const makeTransactionRepository = (): TransactionRepository => ({
       .leftJoin(messages, eq(transactions.id, messages.transactionID))
       .where(eq(transactions.reserverID, userID))
       .groupBy(sql<Date>`${transactions.startedAt}::date`)
-      .orderBy(sql`${transactions.startedAt}::date`)
+      .orderBy(desc(sql`${transactions.startedAt}::date`))
       .limit(10)
       .offset((page - 1) * 10);
 
@@ -107,7 +133,7 @@ export const makeTransactionRepository = (): TransactionRepository => ({
           'startedAt', ${transactions.startedAt},
           'endedAt', ${transactions.endedAt},
           'status', ${transactions.status}
-        )
+        ) ORDER BY ${transactions.startedAt} DESC
       )`,
       })
       .from(transactions)
@@ -121,13 +147,8 @@ export const makeTransactionRepository = (): TransactionRepository => ({
           eq(transactions.status, "APPROVE"),
         ),
       )
-      .groupBy(
-        users.phone,
-        users.firstName,
-        users.lastName,
-        transactions.startedAt,
-      )
-      .orderBy(transactions.startedAt)
+      .groupBy(users.phone, users.firstName, users.lastName)
+      .orderBy(max(transactions.startedAt))
       .limit(10)
       .offset((page - 1) * 10);
 

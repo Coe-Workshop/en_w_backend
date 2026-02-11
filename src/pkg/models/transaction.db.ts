@@ -41,24 +41,22 @@ export type AdminTransactions = {
 export interface GetAllTransactionsByDate {
   user: {
     phone: string;
-    profileUrl?: string; // idk wa bro
     userName: string;
   } | null;
   adminTransactions: AdminTransactions[];
 }
 
 export type AssetsStatus = {
-  user: {
-    phone: string;
-    userName: string;
-    profileUrl?: string; // idk yet
-  };
   assetID: string;
   transactions: {
     status: transactionStatus;
     startedAt: Date;
     endedAt: Date;
     message: string;
+    user: {
+      phone: string;
+      userName: string;
+    };
   };
 };
 
