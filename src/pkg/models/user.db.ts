@@ -14,17 +14,6 @@ import { messages } from "./message.db";
 import { transactions } from "./transaction.db";
 import { enumToPgEnum } from "@/utils/enumToPgEnum";
 
-export interface GoogleUser {
-  googleId: string;
-  email: string;
-  role: string;
-}
-
-export interface TempUser {
-  email: string;
-  role: string;
-}
-
 export enum UserRole {
   RESERVER = "RESERVER",
   ADMIN = 'ADMIN',

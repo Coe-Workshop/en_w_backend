@@ -7,8 +7,9 @@ import {
 import HttpStatus from "http-status";
 import z from "zod";
 import { AppErr } from "@/utils/appErr";
+import { MiddlewareResources } from "@/internal/middleware/auth";
 
-export const makeAssetHandler = (assetService: AssetService) => {
+export const makeAssetHandler = (assetService: AssetService, middleware: MiddlewareResources) => {
   const router = Router();
   const handler = assetHandler(assetService);
 

@@ -8,13 +8,12 @@ import {
 import {
   Strategy as LocalStrategy,
 } from "passport-local";
-import { TempUser, UserRole } from "@/pkg/models";
+import { UserRole } from "@/pkg/models";
 import makeUserService from "@/pkg/user/service";
 import { db } from "./drizzle";
 import makeUserRepository from "@/pkg/user/repository";
 import makeAuthService from "@/pkg/auth/service";
-import { AppErr } from "@/utils/appErr";
-import HttpStatus from "http-status";
+import { TempUser } from "@/internal/validator/user.schema";
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!;
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!;

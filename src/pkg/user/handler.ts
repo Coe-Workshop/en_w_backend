@@ -4,7 +4,7 @@ import { Request, Response } from "express";
 import HttpStatus from "http-status";
 import { AppErr } from "@/utils/appErr";
 import { z } from "zod";
-import { GoogleUser } from "../models";
+import { TempUser } from "@/internal/validator/user.schema";
 
 const makeUserHandler = (userService: UserService) => {
   const router = Router();
@@ -26,9 +26,6 @@ const userHandler = (userService: UserService) => ({
         data: null,
       });
     }
-
-    const user = req.user as GoogleUser;
-    console.log(user)
 
     return res.status(HttpStatus.OK).json({
       success: true,
