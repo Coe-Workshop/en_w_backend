@@ -6,18 +6,19 @@ import {
   ItemIdRequest,
   UpdateItemRequest,
 } from "@/internal/validator/item.schema";
-import { Item, itemCategory, ItemCategory } from "../models";
+import { itemCategory, ItemCategory, UserRole, Item } from "../models";
 import { ItemService } from "../domain/item";
 import { AppErr } from "@/utils/appErr";
+import { MiddlewareResources } from "@/internal/middleware/auth";
 
-export const makeItemHandler = (itemService: ItemService) => {
+export const makeItemHandler = (itemService: ItemService, middleware: MiddlewareResources) => {
   const router = Router();
   const handler = itemHandler(itemService);
 
-  router.get("/", handler.getAllItems);
+  router.get("/", middleware.requireRoles(UserRole.ADMIN), handler.getAllItems);
   router.get("/:id", handler.getItemByID);
-  router.post("/", handler.createItem);
-  router.delete("/:id", handler.deleteItemByID);
+  router.post("/", middleware.requireRoles(UserRole.ADMIN), handler.createItem);
+  router.delete("/:id", middleware.requireRoles(UserRole.ADMIN), handler.deleteItemByID);
   router.patch("/:id", handler.updateItem);
   return router;
 };

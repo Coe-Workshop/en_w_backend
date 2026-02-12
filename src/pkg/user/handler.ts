@@ -4,6 +4,7 @@ import { Request, Response } from "express";
 import HttpStatus from "http-status";
 import { AppErr } from "@/utils/appErr";
 import { z } from "zod";
+import { GoogleUser } from "../models";
 
 const makeUserHandler = (userService: UserService) => {
   const router = Router();
@@ -21,9 +22,13 @@ const userHandler = (userService: UserService) => ({
     if (!req.isAuthenticated()) {
       return res.status(HttpStatus.UNAUTHORIZED).json({
         success: false,
+	// TODO: message about unauthenticated
         data: null,
       });
     }
+
+    const user = req.user as GoogleUser;
+    console.log(user)
 
     return res.status(HttpStatus.OK).json({
       success: true,

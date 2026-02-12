@@ -4,6 +4,7 @@ import { users } from "../models";
 import HttpStatus from "http-status";
 import { AppErr } from "@/utils/appErr";
 import { DatabaseError } from "pg";
+import bcrypt from "bcrypt";
 
 const makeUserRepository = (): UserRepository => ({
   getUser: async (db, column, value) => {
@@ -94,6 +95,10 @@ const makeUserRepository = (): UserRepository => ({
       }
     }
   },
+  checkPassword: async (hashedPassword, password) => {
+    if (!password) return false;
+    return bcrypt.compare(password, hashedPassword);
+  }
 });
 
 export default makeUserRepository;
