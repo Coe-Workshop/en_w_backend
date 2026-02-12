@@ -40,7 +40,6 @@ const assetHandler = (assetService: AssetService) => ({
   createAsset: async (req: Request, res: Response): Promise<Response> => {
     try {
       const reqData: CreateAssetRequest = CreateAssetRequest.parse(req.body);
-      const itemID = reqData.itemID;
 
       const setOfAssetID = new Set(reqData.assetID);
       if (setOfAssetID.size !== reqData.assetID.length) {
@@ -50,7 +49,7 @@ const assetHandler = (assetService: AssetService) => ({
         });
       }
 
-      const asset = await assetService.createAsset(itemID, reqData);
+      const asset = await assetService.createAsset(reqData);
       return res.status(HttpStatus.CREATED).json({
         success: true,
         data: asset,
@@ -94,8 +93,7 @@ const assetHandler = (assetService: AssetService) => ({
   deleteAsset: async (req: Request, res: Response): Promise<Response> => {
     try {
       const reqData: DeleteAssetRequest = DeleteAssetRequest.parse(req.body);
-      const itemID = reqData.itemID;
-      await assetService.deleteAsset(itemID, reqData);
+      await assetService.deleteAsset(reqData);
       return res.status(HttpStatus.CREATED).json({
         success: true,
       });

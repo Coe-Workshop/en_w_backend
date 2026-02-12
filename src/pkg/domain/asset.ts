@@ -1,5 +1,5 @@
 import { DBTransaction } from "@/config/drizzle";
-import { Asset, delAsset, insertAsset, NewAsset } from "../models/asset.db";
+import { Asset, delAsset, NewAsset } from "../models/asset.db";
 import {
   CreateAssetRequest,
   DeleteAssetRequest,
@@ -7,16 +7,12 @@ import {
 
 export interface AssetService {
   getAllAssets: () => Promise<Asset[]>;
-  createAsset: (id: number, req: CreateAssetRequest) => Promise<Asset>;
-  deleteAsset: (id: number, req: DeleteAssetRequest) => Promise<void>;
+  createAsset: (req: CreateAssetRequest) => Promise<Asset>;
+  deleteAsset: (req: DeleteAssetRequest) => Promise<void>;
 }
 
 export interface AssetRepository {
-  createAsset: (
-    db: DBTransaction,
-    Asset: NewAsset,
-    assetWithItemID: insertAsset[],
-  ) => Promise<Asset>;
+  createAsset: (db: DBTransaction, Asset: NewAsset) => Promise<Asset>;
   getAllAssets: (db: DBTransaction) => Promise<Asset[]>;
   deleteAsset: (db: DBTransaction, Asset: delAsset) => Promise<void>;
 }

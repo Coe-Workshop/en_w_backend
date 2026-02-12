@@ -9,9 +9,11 @@ export interface Item {
   name: string;
   assetIDs?: unknown;
   description: string | null;
-  category?: ItemCategory | null;
+  categoryName?: ItemCategory | null;
   categoryID?: number | null;
   imageUrl: string | null;
+  totalQuantity?: number;
+  availableQuantity?: number;
 }
 
 export const citext = customType<{ data: string }>({

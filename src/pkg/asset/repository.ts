@@ -2,7 +2,7 @@ import { eq, and, ilike, inArray } from "drizzle-orm";
 import { DatabaseError } from "pg";
 import { DrizzleQueryError } from "drizzle-orm/errors";
 import HttpStatus from "http-status";
-import { assets, items } from "../models";
+import { assets, assetsToItems, items } from "../models";
 import { AppErr } from "@/utils/appErr";
 import { AssetRepository } from "../domain/asset";
 
@@ -18,44 +18,66 @@ export const makeAssetRepository = (): AssetRepository => ({
         },
       })
       .from(assets)
-      .leftJoin(items, eq(items.id, assets.itemID))
+      .leftJoin(assetsToItems, eq(assetsToItems.assetID, assets.id))
+      .leftJoin(items, eq(items.id, assetsToItems.itemID))
       .orderBy(assets.id);
 
     return result;
   },
 
-  createAsset: async (db, asset, assetWithItemID) => {
+  createAsset: async (db, reqData) => {
     try {
       const isAlreadyExist = await db
         .select()
         .from(assets)
+        .leftJoin(assetsToItems, eq(assetsToItems.assetID, assets.id))
         .where(
           and(
-            inArray(assets.assetID, asset.assetID as string[]),
-            eq(assets.itemID, asset.itemID),
+            inArray(assets.assetID, reqData.assetID as string[]),
+            eq(assetsToItems.itemID, reqData.itemID),
           ),
         );
       if (isAlreadyExist.length > 0) {
         throw new AppErr(HttpStatus.CONFLICT, "ASSET_ALREADY_EXIST");
       }
 
-      const result = await db
-        .insert(assets)
-        .values(assetWithItemID)
-        .returning();
+      const assetsWithKey = reqData.assetID.map((data) => {
+        return {
+          assetID: data as string,
+        };
+      });
 
-      const arrayOfAssetID = result.map((data) => data.assetID);
+      const insertAssetId = await db
+        .insert(assets)
+        .values(assetsWithKey)
+        .onConflictDoUpdate({
+          target: assets.assetID,
+          set: { assetID: assets.assetID },
+        })
+        .returning({ id: assets.id });
+
+      const arrayOfIdAsset = insertAssetId.map((data) => data.id);
+
+      const junctionData = insertAssetId.map((data) => {
+        return {
+          assetID: data.id,
+          itemID: reqData.itemID,
+        };
+      });
+
+      await db.insert(assetsToItems).values(junctionData);
 
       const getItemName = await db
         .select({ name: items.name })
-        .from(items)
-        .where(eq(items.id, result[0].itemID));
+        .from(assetsToItems)
+        .leftJoin(items, eq(items.id, assetsToItems.itemID))
+        .where(eq(items.id, reqData.itemID));
 
       const data = {
-        id: result[0].id,
-        assetID: arrayOfAssetID,
+        id: arrayOfIdAsset,
+        assetID: reqData.assetID,
         item: {
-          id: result[0].itemID,
+          id: reqData.itemID,
           name: getItemName[0].name,
         },
       };
@@ -76,10 +98,12 @@ export const makeAssetRepository = (): AssetRepository => ({
     try {
       const itemID = asset.itemID;
       const assetID = asset.assetID;
+
       const isItemIDExist = await db
         .select()
-        .from(items)
-        .where(eq(items.id, itemID))
+        .from(assetsToItems)
+        .leftJoin(items, eq(items.id, assetsToItems.itemID))
+        .where(eq(items.id, assetsToItems.itemID))
         .limit(1);
 
       if (isItemIDExist.length === 0) {
@@ -87,9 +111,12 @@ export const makeAssetRepository = (): AssetRepository => ({
       }
 
       const isAssetIDExist = await db
-        .select()
+        .select({ id: assets.id })
         .from(assets)
-        .where(and(eq(assets.itemID, itemID), ilike(assets.assetID, assetID)))
+        .leftJoin(assetsToItems, eq(assetsToItems.assetID, assets.id))
+        .where(
+          and(eq(assetsToItems.itemID, itemID), ilike(assets.assetID, assetID)),
+        )
         .limit(1);
 
       if (isAssetIDExist.length === 0) {
@@ -97,8 +124,22 @@ export const makeAssetRepository = (): AssetRepository => ({
       }
 
       await db
-        .delete(assets)
-        .where(and(eq(assets.itemID, itemID), ilike(assets.assetID, assetID)));
+        .delete(assetsToItems)
+        .where(
+          and(
+            eq(assetsToItems.itemID, itemID),
+            eq(assetsToItems.assetID, isAssetIDExist[0].id),
+          ),
+        );
+
+      const isStillleft = await db
+        .select()
+        .from(assetsToItems)
+        .where(eq(assetsToItems.assetID, isAssetIDExist[0].id))
+        .limit(1);
+      if (isStillleft.length === 0) {
+        await db.delete(assets).where(eq(assets.id, isAssetIDExist[0].id));
+      }
     } catch (err) {
       throw err;
     }

@@ -50,6 +50,76 @@
       "when": 1767173785283,
       "tag": "0006_living_sabra",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1769526097043,
+      "tag": "0007_next_marvel_zombies",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1769539231168,
+      "tag": "0008_elite_champions",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1769539428597,
+      "tag": "0009_kind_lorna_dane",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1769620106751,
+      "tag": "0010_handy_skrulls",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1769622054569,
+      "tag": "0011_parallel_zeigeist",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1770219590190,
+      "tag": "0012_smart_hawkeye",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1770308797199,
+      "tag": "0013_misty_spitfire",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1770315923507,
+      "tag": "0014_loving_sue_storm",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1770319922723,
+      "tag": "0015_brief_vulture",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1770322347652,
+      "tag": "0016_shallow_rogue",
+      "breakpoints": true
     }
   ]
 }

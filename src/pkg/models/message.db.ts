@@ -7,11 +7,11 @@ export const messages = pgTable("messages", {
   id: serial("id").primaryKey(),
   userID: uuid("user_id")
     .notNull()
-    .references(() => users.id),
+    .references(() => users.id, { onDelete: "cascade" }),
   detail: text("detail"),
   transactionID: integer("transaction_id")
     .notNull()
-    .references(() => transactions.id),
+    .references(() => transactions.id, { onDelete: "cascade" }),
 });
 
 //one message belong to one user and transaction

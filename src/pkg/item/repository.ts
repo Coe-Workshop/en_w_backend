@@ -1,8 +1,14 @@
-import { eq, sql } from "drizzle-orm";
+import { and, eq, gte, lt, sql } from "drizzle-orm";
 import { DatabaseError } from "pg";
 import { DrizzleQueryError } from "drizzle-orm/errors";
 import HttpStatus from "http-status";
-import { assets, categories, items } from "../models";
+import {
+  assets,
+  assetsToItems,
+  categories,
+  items,
+  transactions,
+} from "../models";
 import { ItemRepository } from "../domain/item";
 import { AppErr } from "@/utils/appErr";
 
@@ -30,19 +36,34 @@ export const makeItemRepository = (): ItemRepository => ({
   },
 
   getAllItems: async (db) => {
+    const right_now = sql`now()`;
     const result = await db
       .select({
         id: items.id,
         name: items.name,
         assetIDs: sql`jsonb_agg(assets.asset_id)`,
         description: items.description,
-        category: categories.name,
+        categoryName: categories.name,
         categoryID: items.categoryID,
         imageUrl: items.imageUrl,
+        totalQuantity: sql<number>`COUNT(assets.id)`,
+        availableQuantity: sql<number>`COUNT(assets.id) - COUNT(transactions.id)`,
       })
       .from(items)
       .leftJoin(categories, eq(items.categoryID, categories.id))
-      .leftJoin(assets, eq(assets.itemID, items.id))
+      .leftJoin(assetsToItems, eq(assetsToItems.itemID, items.id))
+      .leftJoin(assets, eq(assets.id, assetsToItems.assetID))
+      .leftJoin(
+        transactions,
+        and(
+          and(
+            eq(transactions.assetID, assets.id),
+            eq(transactions.status, "APPROVE"),
+          ),
+          lt(transactions.startedAt, right_now),
+          gte(transactions.endedAt, right_now),
+        ),
+      )
       .groupBy(items.id, categories.id)
       .orderBy(items.id);
     return result;
@@ -62,7 +83,8 @@ export const makeItemRepository = (): ItemRepository => ({
       .from(items)
       .where(eq(sql.identifier(`items"."${column}`), value))
       .leftJoin(categories, eq(items.categoryID, categories.id))
-      .leftJoin(assets, eq(assets.itemID, items.id))
+      .leftJoin(assetsToItems, eq(assetsToItems.itemID, items.id))
+      .leftJoin(assets, eq(assets.id, assetsToItems.assetID))
       .groupBy(items.id, categories.name);
 
     if (result.length === 0) {

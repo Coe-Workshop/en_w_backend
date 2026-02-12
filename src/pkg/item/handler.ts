@@ -219,7 +219,7 @@ const itemHandler = (itemService: ItemService) => ({
 
       const data = {
         ...updated,
-        categoryName: reqData.categoryName ?? current?.category,
+        categoryName: reqData.categoryName ?? current?.categoryName,
         assetIDs: current?.assetIDs,
       };
       return res.status(HttpStatus.OK).json({
