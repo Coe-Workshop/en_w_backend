@@ -5,7 +5,7 @@ import HttpStatus from "http-status";
 import passport from "passport";
 import z from "zod";
 import { AuthService } from "../domain/auth";
-import { GoogleUser } from "../models";
+import { GoogleUser, TempUser } from "../models";
 
 const makeAuthHandler = (authService: AuthService) => {
   const router = Router();
@@ -70,41 +70,47 @@ const authHandler = (authService: AuthService) => ({
     });
   },
 
-  login: async (req: Request, res: Response) => {
-    try {
-      const reqData = LoginRequest.safeParse(req.body);
-      if (!reqData.success) {
-        return res.status(HttpStatus.BAD_REQUEST).json({
-          success: false,
-          error: reqData.error.issues[0].message,
-        });
-      }
+  login: (req: Request, res: Response) => {
+      passport.authenticate('local', (err: any, user: TempUser) => {
+	if (err) {
+	  if (err instanceof AppErr) {
+	    if (err.code === HttpStatus.NOT_FOUND &&
+		err.message === "RECORD_NOT_FOUND") {
+	       return res.status(err.code).json({
+		 success: false,
+		 message: "อีเมล หรือ รหัสผ่าน ไม่ถูกต้อง",
+	       });
+	    }
+	    if (err.code === HttpStatus.UNAUTHORIZED &&
+		err.message == "USER_DOES_NOT_HAVE_CREDENTIALS") {
+	      return res.status(err.code).json({
+		success: false,
+		message: "อีเมล หรือ รหัสผ่าน ไม่ถูกต้อง"
+	      })
+	    }
+	    if (err.code === HttpStatus.UNAUTHORIZED &&
+		err.message == "INVALID_CREDENTIALS") {
+	      return res.status(err.code).json({
+		success: false,
+		message: "อีเมล หรือ รหัสผ่าน ไม่ถูกต้อง"
+	      })
+	    }
+	  }
 
-      await authService.loginEmailPassword(reqData.data);
-      return res.status(HttpStatus.OK).json({
-        success: true,
-        messages: "เข้าสู่ระบบสำเร็จ"
-      });
-    } catch (err) {
-      if (
-        err instanceof AppErr &&
-        err.code === HttpStatus.NOT_FOUND &&
-        err.message === "RECORD_NOT_FOUND"
-      ) {
-        return res.status(HttpStatus.NOT_FOUND).json({
-          success: false,
-          error: "อีเมล หรือ รหัสผ่าน ไม่ถูกต้อง",
-        });
-      }
+	  const er = err as Error;
+	  return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+	    success: false,
+	    message:
+	      "ไม่สามารถเข้าสู่ระบบได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
+	    error: er.message,
+	  });
+	}
 
-      const er = err as Error;
-      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-        success: false,
-        message:
-          "ไม่สามารถเข้าสู่ระบบได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
-        error: er.message,
-      });
-    }
+	return res.status(HttpStatus.OK).json({
+	  success: true,
+	  messages: "เข้าสู่ระบบสำเร็จ"
+	});
+    })(req, res);
   },
 
   register: async (req: Request, res: Response) => {
