@@ -1,2 +1,0 @@
-ALTER TABLE "transactions" ADD COLUMN "item_id" integer NOT NULL;--> statement-breakpoint
-ALTER TABLE "transactions" ADD CONSTRAINT "transactions_item_id_items_id_fk" FOREIGN KEY ("item_id") REFERENCES "public"."items"("id") ON DELETE no action ON UPDATE no action;

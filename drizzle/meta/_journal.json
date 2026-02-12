@@ -5,120 +5,15 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1764681431006,
-      "tag": "0000_cool_marten_broadcloak",
+      "when": 1770894717219,
+      "tag": "0000_brief_pretty_boy",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1764828844126,
-      "tag": "0001_serious_lila_cheney",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1764973385809,
-      "tag": "0002_flaky_adam_destine",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1765013533561,
-      "tag": "0003_flat_scorpion",
-      "breakpoints": true
-    },
-    {
-      "idx": 4,
-      "version": "7",
-      "when": 1766305096282,
-      "tag": "0004_warm_sentinels",
-      "breakpoints": true
-    },
-    {
-      "idx": 5,
-      "version": "7",
-      "when": 1767018994358,
-      "tag": "0005_premium_gorilla_man",
-      "breakpoints": true
-    },
-    {
-      "idx": 6,
-      "version": "7",
-      "when": 1767173785283,
-      "tag": "0006_living_sabra",
-      "breakpoints": true
-    },
-    {
-      "idx": 7,
-      "version": "7",
-      "when": 1769526097043,
-      "tag": "0007_next_marvel_zombies",
-      "breakpoints": true
-    },
-    {
-      "idx": 8,
-      "version": "7",
-      "when": 1769539231168,
-      "tag": "0008_elite_champions",
-      "breakpoints": true
-    },
-    {
-      "idx": 9,
-      "version": "7",
-      "when": 1769539428597,
-      "tag": "0009_kind_lorna_dane",
-      "breakpoints": true
-    },
-    {
-      "idx": 10,
-      "version": "7",
-      "when": 1769620106751,
-      "tag": "0010_handy_skrulls",
-      "breakpoints": true
-    },
-    {
-      "idx": 11,
-      "version": "7",
-      "when": 1769622054569,
-      "tag": "0011_parallel_zeigeist",
-      "breakpoints": true
-    },
-    {
-      "idx": 12,
-      "version": "7",
-      "when": 1770219590190,
-      "tag": "0012_smart_hawkeye",
-      "breakpoints": true
-    },
-    {
-      "idx": 13,
-      "version": "7",
-      "when": 1770308797199,
-      "tag": "0013_misty_spitfire",
-      "breakpoints": true
-    },
-    {
-      "idx": 14,
-      "version": "7",
-      "when": 1770315923507,
-      "tag": "0014_loving_sue_storm",
-      "breakpoints": true
-    },
-    {
-      "idx": 15,
-      "version": "7",
-      "when": 1770319922723,
-      "tag": "0015_brief_vulture",
-      "breakpoints": true
-    },
-    {
-      "idx": 16,
-      "version": "7",
-      "when": 1770322347652,
-      "tag": "0016_shallow_rogue",
+      "when": 1770894815927,
+      "tag": "0001_gray_thunderball",
       "breakpoints": true
     }
   ]

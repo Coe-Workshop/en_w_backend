@@ -1,1 +1,0 @@
-ALTER TABLE "transactions" ALTER COLUMN "asset_id" SET DATA TYPE integer;
