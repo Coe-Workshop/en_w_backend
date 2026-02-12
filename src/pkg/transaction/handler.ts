@@ -10,9 +10,11 @@ import {
   pageNumberRequest,
 } from "@/internal/validator/transaction.schema";
 import { TransactionService } from "../domain/transaction";
+import { MiddlewareResources } from "@/internal/middleware/auth";
 
 export const makeTransactionHandler = (
   transactionService: TransactionService,
+  middleware: MiddlewareResources
 ) => {
   const router = Router();
 

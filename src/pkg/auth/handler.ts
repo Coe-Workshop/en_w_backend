@@ -1,11 +1,11 @@
-import { LoginRequest, RegisterRequest } from "@/internal/validator/auth.schema";
+import { RegisterRequest } from "@/internal/validator/auth.schema";
 import { AppErr } from "@/utils/appErr";
 import { Request, Response, Router } from "express";
 import HttpStatus from "http-status";
 import passport from "passport";
 import z from "zod";
 import { AuthService } from "../domain/auth";
-import { GoogleUser, TempUser } from "../models";
+import { TempUser } from "@/internal/validator/user.schema";
 
 const makeAuthHandler = (authService: AuthService) => {
   const router = Router();
@@ -35,9 +35,16 @@ const makeAuthHandler = (authService: AuthService) => {
 const authHandler = (authService: AuthService) => ({
   googleCallback: async (req: Request, res: Response) => {
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-    const user = req.user as GoogleUser;
-    const isRegistered = await authService.isRegistered(user.email);
-    if (user && !isRegistered) {
+    const result = TempUser.safeParse(req.user);
+    if (!result.success) {
+      return res.status(HttpStatus.FORBIDDEN).json({
+	success: false,
+	message: "คำขอไม่ถูกต้อง",
+	error: result.error
+      })
+    } 
+    const isRegistered = await authService.isRegistered(result.data.email);
+    if (result.data && !isRegistered) {
       return res.redirect(`${frontendUrl}/on-boarding`);
     }
 
@@ -106,9 +113,19 @@ const authHandler = (authService: AuthService) => ({
 	  });
 	}
 
-	return res.status(HttpStatus.OK).json({
-	  success: true,
-	  messages: "เข้าสู่ระบบสำเร็จ"
+	req.logIn(user, (err) => {
+	  if (err) {
+	    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+	      success: false,
+	      message:
+		"เข้าสู่ระบบไม่สำเร็จ ",
+	      error: err.message,
+	    });
+	  }
+	  return res.status(HttpStatus.OK).json({
+	    success: true,
+	    messages: "เข้าสู่ระบบสำเร็จ"
+	  });
 	});
     })(req, res);
   },
@@ -123,9 +140,9 @@ const authHandler = (authService: AuthService) => ({
 
     try {
       const reqData: RegisterRequest = RegisterRequest.parse(req.body);
-      const googleUser = req.user as GoogleUser;
+      const resultUser = TempUser.parse(req.user);
       const reqUser = {
-        email: googleUser.email,
+        email: resultUser.email,
         ...reqData,
       };
       const user = authService.register(reqUser);

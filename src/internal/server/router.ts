@@ -19,9 +19,9 @@ import { makeTransactionHandler } from "@/pkg/transaction/handler";
 const setupRoutes = (app: Express, db: DB) => {
   const userRepository = makeUserRepository();
   const itemRepository = makeItemRepository();
-  const middleware = makeMiddleware();
   const assetRepository = makeAssetRepository();
   const transactionRepository = makeTransactionRepository();
+  const middleware = makeMiddleware();
   const authService = makeAuthService(db, userRepository);
   const itemService = makeItemService(db, itemRepository);
   const assetService = makeAssetService(db, assetRepository);

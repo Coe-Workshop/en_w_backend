@@ -15,11 +15,11 @@ export const makeItemHandler = (itemService: ItemService, middleware: Middleware
   const router = Router();
   const handler = itemHandler(itemService);
 
-  router.get("/", middleware.requireRoles(UserRole.ADMIN), handler.getAllItems);
+  router.get("/", handler.getAllItems);
   router.get("/:id", handler.getItemByID);
   router.post("/", middleware.requireRoles(UserRole.ADMIN), handler.createItem);
   router.delete("/:id", middleware.requireRoles(UserRole.ADMIN), handler.deleteItemByID);
-  router.patch("/:id", handler.updateItem);
+  router.patch("/:id", middleware.requireRoles(UserRole.ADMIN), handler.updateItem);
   return router;
 };
 
