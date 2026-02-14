@@ -6,6 +6,7 @@ import { db } from "@/config/drizzle";
 
 const makeServer = () => {
   const app = express();
+  app.set('trust proxy', 1);
 
   const corsWhitelist = new Set([
     'https://dev-coe.ionize13.com',
