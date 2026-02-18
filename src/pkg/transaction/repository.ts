@@ -1,4 +1,4 @@
-import { and, desc, eq, gt, lt, max, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, lt, ne, sql } from "drizzle-orm";
 import { DatabaseError } from "pg";
 import { DrizzleQueryError } from "drizzle-orm/errors";
 import HttpStatus from "http-status";
@@ -11,6 +11,7 @@ import {
   items,
   messages,
   transactions,
+  transactionStatus,
   users,
   UserTransactions,
 } from "../models";
@@ -18,13 +19,72 @@ import { AppErr } from "@/utils/appErr";
 import { TransactionRepository } from "../domain/transaction";
 
 export const makeTransactionRepository = (): TransactionRepository => ({
-  getAllTransactionsByItem: async (db, itemID) => {
+  checkTransactionConflict: async (db, reqData) => {
+    const details = [];
+    let count = 0;
+    for (const transactionId of reqData.transactionId) {
+      const target = await db
+        .select()
+        .from(transactions)
+        .where(eq(transactions.id, transactionId));
+
+      if (target.length === 0) {
+        throw new AppErr(HttpStatus.NOT_FOUND, "TRANSACTION_NOT_FOUND");
+      }
+
+      const conflicts = await db
+        .select({
+          userName: sql<string>`${users.firstName} || ' ' || ${users.lastName}`,
+          itemName: items.name,
+          assetId: assets.assetID,
+          startedAt: transactions.startedAt,
+          endedAt: transactions.endedAt,
+        })
+        .from(transactions)
+        .leftJoin(assets, eq(assets.id, transactions.assetID))
+        .leftJoin(items, eq(items.id, transactions.itemID))
+        .leftJoin(users, eq(users.id, transactions.reserverID))
+        .where(
+          and(
+            ne(transactions.id, target[0].id),
+            eq(transactions.assetID, target[0].assetID),
+            eq(transactions.itemID, target[0].itemID),
+            eq(transactions.status, "RESERVE"),
+            lt(transactions.startedAt, target[0].endedAt),
+            gt(transactions.endedAt, target[0].startedAt),
+          ),
+        )
+        .orderBy(asc(sql`${transactions.startedAt}::date`));
+
+      count += conflicts.length;
+      details.push({
+        transactionId: target[0].id,
+        isConflict: conflicts.length > 0,
+        conflicts: conflicts,
+      });
+    }
+
+    const report = {
+      totalConflicts: count,
+      details: details,
+    };
+
+    return report;
+  },
+
+  getAllTransactionsByItem: async (db, reqData) => {
     const isExist = await db.query.items.findFirst({
-      where: eq(items.id, itemID),
+      where: eq(items.id, reqData.itemId),
     });
     if (!isExist) {
       throw new AppErr(HttpStatus.NOT_FOUND, "ITEM_NOT_FOUND");
     }
+
+    // +7 hrs
+    const startOfDay = new Date(reqData.date);
+    startOfDay.setHours(8, 0, 0, 0);
+    const endOfDay = new Date(reqData.date);
+    endOfDay.setHours(17, 0, 0, 0);
 
     const result = await db
       .select({
@@ -42,7 +102,8 @@ export const makeTransactionRepository = (): TransactionRepository => ({
             'status', transactions.status,
             'user', json_build_object(
               'phone',  transactions.phone,
-              'userName', transactions.firstName || ' ' || transactions.lastName
+              'userName', transactions.firstName || ' ' || transactions.lastName,
+              'profileUrl', 'https://gear.kku.ac.th/wp-content/uploads/2025/05/wasu.jpg'
             )
           )
           ORDER BY transactions.startedAt DESC
@@ -61,6 +122,9 @@ export const makeTransactionRepository = (): TransactionRepository => ({
           LEFT JOIN ${messages} ON ${messages.transactionID} = ${transactions.id}
           LEFT JOIN ${users} ON ${users.id} = ${transactions.reserverID}
           WHERE ${transactions.assetID} = ${assets.id} AND ${transactions.status} = 'APPROVE'
+          AND ${transactions.startedAt} > ${startOfDay}
+          AND ${transactions.endedAt} < ${endOfDay}
+          AND ${messages.userID} = ${transactions.reserverID}
           ORDER BY ${transactions.startedAt} DESC
           LIMIT 10
         ) 
@@ -75,9 +139,97 @@ export const makeTransactionRepository = (): TransactionRepository => ({
       .leftJoin(assetsToItems, eq(assetsToItems.itemID, items.id))
       .leftJoin(assets, eq(assets.id, assetsToItems.assetID))
       .leftJoin(categories, eq(items.categoryID, categories.id))
-      .where(eq(items.id, itemID))
+      .where(eq(items.id, reqData.itemId))
       .groupBy(items.name, items.description, categories.name, items.imageUrl);
     return result;
+  },
+
+  updateAllTransactionByUser: async (db, transactionsRequest) => {
+    const newStatus = transactionsRequest.isApproved ? "APPROVE" : "REJECT";
+    const completeData = {
+      status: newStatus as transactionStatus,
+      approverID: transactionsRequest.approverID,
+    };
+    const report = [];
+    try {
+      const result = await db
+        .update(transactions)
+        .set(completeData)
+        .where(
+          and(
+            eq(transactions.reserverID, transactionsRequest.reserverID),
+            eq(transactions.status, "RESERVE"),
+          ),
+        )
+        .returning({
+          id: transactions.id,
+        });
+
+      if (result.length === 0) {
+        throw new AppErr(HttpStatus.NOT_FOUND, "RESERVER_NOT_FOUND");
+      }
+      report.push(result);
+
+      const temp = [];
+      if (newStatus === "APPROVE") {
+        for (const data of result) {
+          const target = await db
+            .select()
+            .from(transactions)
+            .where(eq(transactions.id, data.id));
+          const conflicts = await db
+            .update(transactions)
+            .set({
+              status: "REJECT",
+              approverID: transactionsRequest.approverID,
+            })
+            .where(
+              and(
+                ne(transactions.id, data.id),
+                eq(transactions.assetID, target[0].assetID),
+                eq(transactions.itemID, target[0].itemID),
+                eq(transactions.status, "RESERVE"),
+                lt(transactions.startedAt, target[0].endedAt),
+                gt(transactions.endedAt, target[0].startedAt),
+              ),
+            )
+            .returning({ id: transactions.id });
+          if (conflicts.length > 0) {
+            const conflictData = conflicts.map((data) => {
+              return { id: data.id };
+            });
+            temp.push(...conflictData);
+          }
+        }
+      }
+      report.push(temp);
+      return report;
+    } catch (err) {
+      throw err;
+    }
+  },
+
+  cancelTransaction: async (db, transactionData) => {
+    try {
+      const result = await db
+        .update(transactions)
+        .set({
+          status: "REJECT" as transactionStatus,
+        })
+        .where(
+          and(
+            eq(transactions.id, transactionData.id),
+            eq(transactions.reserverID, transactionData.reserverID),
+          ),
+        )
+        .returning();
+
+      if (result.length === 0) {
+        throw new AppErr(HttpStatus.NOT_FOUND, "TRANSACTION_NOT_FOUND");
+      }
+    } catch (err) {
+      throw err;
+    }
   },
 
   getAllTransactionsByUser: async (db, userID, page) => {
@@ -125,18 +277,27 @@ export const makeTransactionRepository = (): TransactionRepository => ({
     };
   },
 
-  getAllTransactionsByDate: async (db, date, page) => {
-    // +7 hrs
-    const startOfDay = new Date(date);
-    startOfDay.setHours(15, 0, 0, 0);
-    const endOfDay = new Date(date);
-    endOfDay.setHours(24, 0, 0, 0);
-
+  getAllTransactionsByStatus: async (db, status, page) => {
+    const sortPeople = [];
+    if (status === "RESERVE") {
+      sortPeople.push(
+        sql`MIN(${transactions.startedAt}) ASC`,
+        sql`MIN(${transactions.createdAt}) ASC`,
+      );
+    } else {
+      sortPeople.push(sql`MAX(${transactions.createdAt}) DESC`);
+    }
+    const isFiltered = status ? eq(transactions.status, status) : undefined;
+    const innerSort =
+      status === "RESERVE"
+        ? sql`${transactions.startedAt} ASC`
+        : sql`${transactions.createdAt} DESC`;
     const result = await db
       .select({
         user: {
           phone: users.phone,
           userName: sql<string>`${users.firstName} || ' ' || ${users.lastName}`,
+          profileUrl: sql<string>`'https://gear.kku.ac.th/wp-content/uploads/2025/05/wasu.jpg'`,
         },
         adminTransactions: sql<AdminTransactions[]>`jsonb_agg(
         json_build_object(
@@ -145,24 +306,19 @@ export const makeTransactionRepository = (): TransactionRepository => ({
           'startedAt', ${transactions.startedAt},
           'endedAt', ${transactions.endedAt},
           'status', ${transactions.status}
-        ) ORDER BY ${transactions.startedAt} DESC
+        ) ORDER BY 
+            ${innerSort}
       )`,
       })
       .from(transactions)
       .leftJoin(assets, eq(assets.id, transactions.assetID))
       .leftJoin(items, eq(items.id, transactions.itemID))
       .leftJoin(users, eq(users.id, transactions.reserverID))
-      .where(
-        and(
-          gt(transactions.startedAt, startOfDay),
-          lt(transactions.endedAt, endOfDay),
-          eq(transactions.status, "APPROVE"),
-        ),
-      )
+      .where(isFiltered)
       .groupBy(users.phone, users.firstName, users.lastName)
-      .orderBy(max(transactions.startedAt))
-      .limit(10)
-      .offset((page - 1) * 10);
+      .orderBy(...sortPeople)
+      .offset((page - 1) * 15)
+      .limit(15);
 
     return result;
   },
@@ -219,7 +375,58 @@ export const makeTransactionRepository = (): TransactionRepository => ({
 
   createMessage: async (db, message) => {
     try {
-      await db.insert(messages).values(message).returning();
+      await db.insert(messages).values(message);
+    } catch (err) {
+      throw err;
+    }
+  },
+
+  updateTransactionById: async (db, transaction) => {
+    const newStatus = transaction.isApproved ? "APPROVE" : "REJECT";
+    const completeData = {
+      ...transaction,
+      status: newStatus as transactionStatus,
+    };
+    try {
+      const result = await db
+        .update(transactions)
+        .set(completeData)
+        .where(
+          and(
+            eq(transactions.id, transaction.transactionId),
+            eq(transactions.status, "RESERVE"),
+          ),
+        )
+        .returning();
+
+      if (result.length === 0) {
+        throw new AppErr(HttpStatus.NOT_FOUND, "TRANSACTION_NOT_FOUND");
+      }
+      if (newStatus === "APPROVE") {
+        const conflicts = await db
+          .update(transactions)
+          .set({
+            status: "REJECT",
+            approverID: transaction.approverID,
+          })
+          .where(
+            and(
+              ne(transactions.id, transaction.transactionId),
+              eq(transactions.assetID, result[0].assetID),
+              eq(transactions.itemID, result[0].itemID),
+              eq(transactions.status, "RESERVE"),
+              lt(transactions.startedAt, result[0].endedAt),
+              gt(transactions.endedAt, result[0].startedAt),
+            ),
+          )
+          .returning({ id: transactions.id });
+        if (conflicts.length > 0) {
+          return conflicts.map((data) => {
+            return { id: data.id };
+          });
+        }
+      }
+      return [];
     } catch (err) {
       throw err;
     }

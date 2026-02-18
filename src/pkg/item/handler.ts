@@ -11,15 +11,26 @@ import { ItemService } from "../domain/item";
 import { AppErr } from "@/utils/appErr";
 import { MiddlewareResources } from "@/internal/middleware/auth";
 
-export const makeItemHandler = (itemService: ItemService, middleware: MiddlewareResources) => {
+export const makeItemHandler = (
+  itemService: ItemService,
+  middleware: MiddlewareResources,
+) => {
   const router = Router();
   const handler = itemHandler(itemService);
 
   router.get("/", handler.getAllItems);
   router.get("/:id", handler.getItemByID);
   router.post("/", middleware.requireRoles(UserRole.ADMIN), handler.createItem);
-  router.delete("/:id", middleware.requireRoles(UserRole.ADMIN), handler.deleteItemByID);
-  router.patch("/:id", middleware.requireRoles(UserRole.ADMIN), handler.updateItem);
+  router.delete(
+    "/:id",
+    middleware.requireRoles(UserRole.ADMIN),
+    handler.deleteItemByID,
+  );
+  router.patch(
+    "/:id",
+    middleware.requireRoles(UserRole.ADMIN),
+    handler.updateItem,
+  );
   return router;
 };
 
@@ -29,7 +40,10 @@ const itemHandler = (itemService: ItemService) => ({
       const data = await itemService.getAllItems();
       return res.status(HttpStatus.OK).json({
         success: true,
-        data: data,
+        data: {
+          numberOfPage: Math.ceil(data.length / 30),
+          items: data,
+        },
       });
     } catch (error) {
       const err = error as Error;
