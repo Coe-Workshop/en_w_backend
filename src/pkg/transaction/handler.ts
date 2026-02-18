@@ -55,7 +55,11 @@ export const makeTransactionHandler = (
     middleware.requireRoles(UserRole.ADMIN),
     handler.getAllTransactionsByStatus,
   );
-  router.post("/check-conflicts", handler.checkTransactionConflict);
+  router.post(
+    "/check-conflicts",
+    middleware.requireRoles(UserRole.ADMIN),
+    handler.checkTransactionConflict,
+  );
   return router;
 };
 
@@ -183,10 +187,14 @@ const transactionHandler = (transactionService: TransactionService) => ({
 
   createTransaction: async (req: Request, res: Response): Promise<Response> => {
     try {
-      const reqData: CreateTransactionRequest = CreateTransactionRequest.parse(
-        req.body,
-      );
-      const transaction = await transactionService.createTransaction(reqData);
+      const reqData = {
+        ...req.body,
+        reserverID: res.locals.id,
+      };
+      const completedData: CreateTransactionRequest =
+        CreateTransactionRequest.parse(reqData);
+      const transaction =
+        await transactionService.createTransaction(completedData);
 
       return res.status(HttpStatus.CREATED).json({
         success: true,
@@ -269,8 +277,8 @@ const transactionHandler = (transactionService: TransactionService) => ({
       const rawData = {
         ...req.body,
         transactionId: req.params.id,
-        // approverID: res.locals.id,
-        approverID: "427bf6e9-00c5-40d6-8af4-d0b603c468be",
+        approverID: res.locals.id,
+        // approverID: "427bf6e9-00c5-40d6-8af4-d0b603c468be",
       };
       const reqData: UpdateTransactionByIdRequest =
         UpdateTransactionByIdRequest.parse(rawData);
