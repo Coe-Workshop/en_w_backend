@@ -1,0 +1,56 @@
+stages:
+  - build
+  - push
+  - deploy
+
+variables:
+  IMAGE_NAME: ${DOCKER_USERNAME}/libreserve-backend
+  IMAGE_TAG: dev-${CI_COMMIT_SHA:0:8}
+
+.docker-build:
+  image: docker:24-cli
+  services:
+    - docker:24-cli-dind
+  before_script:
+    - docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD $DOCKER_REGISTRY
+
+build:
+  stage: build
+  extends: .docker-build
+  script:
+    - docker build -t $IMAGE_NAME:$IMAGE_TAG .
+    - docker build -t $IMAGE_NAME:latest .
+    - docker save $IMAGE_NAME:$IMAGE_TAG $IMAGE_NAME:latest -o image.tar
+  artifacts:
+    paths:
+      - image.tar
+
+push:
+  stage: push
+  extends: .docker-build
+  needs:
+    - build
+  script:
+    - docker load -i image.tar
+    - docker push $IMAGE_NAME:$IMAGE_TAG
+    - docker push $IMAGE_NAME:latest
+  only:
+    - dev
+
+deploy:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  needs:
+    - push
+  script:
+    - kubectl version --client
+    - echo "$KUBECONFIG" | base64 -d > kubeconfig
+    - export KUBECONFIG=kubeconfig
+    - kubectl config get-contexts
+    - |
+      # Update image in backend.yaml
+      sed -i 's|image: ionize13/libreserve-backend:.*|image: '"$IMAGE_NAME"':'"$IMAGE_TAG"'|' backend.yaml
+      cat backend.yaml
+    - kubectl apply -f backend.yaml
+  only:
+    - dev

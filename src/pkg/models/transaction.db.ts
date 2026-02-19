@@ -38,7 +38,7 @@ export type AdminTransactions = {
   endedAt: Date;
   status: transactionStatus;
 };
-export interface GetAllTransactionsByDate {
+export interface GetAllTransactionsByStatus {
   user: {
     phone: string;
     userName: string;
@@ -88,6 +88,29 @@ export interface GetAllTransactionsByUser {
     startTime: Date;
     userTransactions: UserTransactions[];
   }[];
+}
+
+export interface transactionIdList {
+  id: number;
+}
+
+export interface ConflictUser {
+  userName: string;
+  itemName: string | null;
+  assetId: string | null;
+  startedAt: Date;
+  endedAt: Date;
+}
+
+export interface TransactionCheckResult {
+  transactionId: number;
+  isConflict: boolean;
+  conflicts?: ConflictUser[];
+}
+
+export interface UpdateTransactionsConflicts {
+  totalConflicts: number;
+  details: TransactionCheckResult[];
 }
 
 export const transactions = pgTable("transactions", {

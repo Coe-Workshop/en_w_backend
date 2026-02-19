@@ -3,39 +3,63 @@ import { z } from "zod";
 import HttpStatus from "http-status";
 import { AppErr } from "@/utils/appErr";
 import {
+  CancelTransactionRequest,
+  CheckTransactionConflictRequest,
   CreateTransactionRequest,
-  GetAllTransactionsByDateRequest,
+  GetAllTransactionsByStatusRequest,
   GetAllTransactionsByUserRequest,
   GetTransactionByItemIdRequest,
   pageNumberRequest,
+  UpdateAllTransactionByUserRequest,
+  UpdateTransactionByIdRequest,
 } from "@/internal/validator/transaction.schema";
 import { TransactionService } from "../domain/transaction";
 import { MiddlewareResources } from "@/internal/middleware/auth";
+import { UserRole } from "../models";
 
 export const makeTransactionHandler = (
   transactionService: TransactionService,
-  middleware: MiddlewareResources
+  middleware: MiddlewareResources,
 ) => {
   const router = Router();
 
   const handler = transactionHandler(transactionService);
-  router.post("/", handler.createTransaction);
-  router.get("/", (req: Request, res: Response) => {
-    const { date, item, user } = req.query;
-    if (date) {
-      return handler.getAllTransactionsByDate(req, res);
-    }
-    if (item) {
-      return handler.getAllTransactionsByItem(req, res);
-    }
-    if (user) {
-      return handler.getAllTransactionsByUser(req, res);
-    }
-    return res.status(HttpStatus.BAD_REQUEST).json({
-      success: false,
-      error: "ไม่พบ filter ที่คุณระบุ",
-    });
-  });
+  router.post("/", middleware.reqAuthHandler(), handler.createTransaction);
+  router.patch(
+    "/:id",
+    middleware.requireRoles(UserRole.ADMIN),
+    handler.updateTransactionById,
+  );
+  router.patch(
+    "/reserver/:id",
+    middleware.requireRoles(UserRole.ADMIN),
+    handler.updateAllTransactionByUser,
+  );
+  router.patch(
+    "/:id/cancel",
+    middleware.reqAuthHandler(),
+    handler.cancelTransaction,
+  );
+  router.get(
+    "/by-item",
+    middleware.requireRoles(UserRole.ADMIN),
+    handler.getAllTransactionsByItem,
+  );
+  router.get(
+    "/by-user",
+    middleware.reqAuthHandler(),
+    handler.getAllTransactionsByUser,
+  );
+  router.get(
+    "/by-status",
+    middleware.requireRoles(UserRole.ADMIN),
+    handler.getAllTransactionsByStatus,
+  );
+  router.post(
+    "/check-conflicts",
+    middleware.requireRoles(UserRole.ADMIN),
+    handler.checkTransactionConflict,
+  );
   return router;
 };
 
@@ -78,7 +102,7 @@ const transactionHandler = (transactionService: TransactionService) => ({
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false,
         message:
-          "ไม่สามารถเข้าถึงรายการการจองของผู้ใช้ได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
+          "ไม่สามารถเข้าถึงข้อมูลการจองได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
         error: er.message,
       });
     }
@@ -89,8 +113,12 @@ const transactionHandler = (transactionService: TransactionService) => ({
     res: Response,
   ): Promise<Response> => {
     try {
+      const rawData = {
+        itemId: req.query.item,
+        date: req.query.date,
+      };
       const reqData: GetTransactionByItemIdRequest =
-        GetTransactionByItemIdRequest.parse(req.query.item);
+        GetTransactionByItemIdRequest.parse(rawData);
       const result = await transactionService.getAllTransactionsByItem(reqData);
       return res.status(HttpStatus.OK).json({
         success: true,
@@ -118,21 +146,21 @@ const transactionHandler = (transactionService: TransactionService) => ({
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false,
         message:
-          "ไม่สามารถเข้าถึงเลขครุภัณฑ์ของอุปกรณ์ได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
+          "ไม่สามารถเข้าถึงข้อมูลการจองได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
         error: error.message,
       });
     }
   },
 
-  getAllTransactionsByDate: async (
+  getAllTransactionsByStatus: async (
     req: Request,
     res: Response,
   ): Promise<Response> => {
     try {
-      const reqData: GetAllTransactionsByDateRequest =
-        GetAllTransactionsByDateRequest.parse(req.query.date);
+      const reqData: GetAllTransactionsByStatusRequest =
+        GetAllTransactionsByStatusRequest.parse(req.query.status);
       const page: pageNumberRequest = pageNumberRequest.parse(req.query.page);
-      const result = await transactionService.getAllTransactionsByDate(
+      const result = await transactionService.getAllTransactionsByStatus(
         reqData,
         page,
       );
@@ -159,10 +187,14 @@ const transactionHandler = (transactionService: TransactionService) => ({
 
   createTransaction: async (req: Request, res: Response): Promise<Response> => {
     try {
-      const reqData: CreateTransactionRequest = CreateTransactionRequest.parse(
-        req.body,
-      );
-      const transaction = await transactionService.createTransaction(reqData);
+      const reqData = {
+        ...req.body,
+        reserverID: res.locals.id,
+      };
+      const completedData: CreateTransactionRequest =
+        CreateTransactionRequest.parse(reqData);
+      const transaction =
+        await transactionService.createTransaction(completedData);
 
       return res.status(HttpStatus.CREATED).json({
         success: true,
@@ -232,6 +264,180 @@ const transactionHandler = (transactionService: TransactionService) => ({
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false,
         message: "ไม่สามารจองอุปกรณ์ได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
+        error: er.message,
+      });
+    }
+  },
+
+  updateTransactionById: async (
+    req: Request,
+    res: Response,
+  ): Promise<Response> => {
+    try {
+      const rawData = {
+        ...req.body,
+        transactionId: req.params.id,
+        approverID: res.locals.id,
+        // approverID: "427bf6e9-00c5-40d6-8af4-d0b603c468be",
+      };
+      const reqData: UpdateTransactionByIdRequest =
+        UpdateTransactionByIdRequest.parse(rawData);
+      await transactionService.updateTransactionById(reqData);
+      return res.status(HttpStatus.OK).json({
+        success: true,
+      });
+    } catch (err) {
+      console.log(err);
+      if (err instanceof z.ZodError) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false,
+          error: err.issues[0].message,
+        });
+      }
+      if (err instanceof AppErr) {
+        if (
+          err.code === HttpStatus.NOT_FOUND &&
+          err.message === "TRANSACTION_NOT_FOUND"
+        ) {
+          return res.status(HttpStatus.NOT_FOUND).json({
+            success: false,
+            error: "ไม่พบข้อมูลการจองดังกล่าว หรือถูกดำเนินการไปแล้ว",
+          });
+        }
+      }
+      const er = err as Error;
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message:
+          "ไม่สามารถเปลี่ยนสถานะการจองได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
+        error: er.message,
+      });
+    }
+  },
+
+  updateAllTransactionByUser: async (
+    req: Request,
+    res: Response,
+  ): Promise<Response> => {
+    try {
+      const rawData = {
+        ...req.body,
+        reserverID: req.params.id,
+        approverID: res.locals.id,
+        // approverID: "427bf6e9-00c5-40d6-8af4-d0b603c468be",
+      };
+      const reqData: UpdateAllTransactionByUserRequest =
+        UpdateAllTransactionByUserRequest.parse(rawData);
+      await transactionService.updateAllTransactionByUser(reqData);
+      return res.status(HttpStatus.OK).json({
+        success: true,
+      });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false,
+          error: err.issues[0].message,
+        });
+      }
+      if (err instanceof AppErr) {
+        if (
+          err.code === HttpStatus.NOT_FOUND &&
+          err.message === "RESERVER_NOT_FOUND"
+        ) {
+          return res.status(HttpStatus.NOT_FOUND).json({
+            success: false,
+            error: "ไม่พบผู้จองดังกล่าว หรือทุกรายการจองถูกดำเนินการไปแล้ว",
+          });
+        }
+      }
+      const er = err as Error;
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message:
+          "ไม่สามารถเปลี่ยนสถานะการจองได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
+        error: er.message,
+      });
+    }
+  },
+
+  cancelTransaction: async (req: Request, res: Response): Promise<Response> => {
+    console.log("is it working?");
+    try {
+      const rawData = {
+        id: req.params.id,
+        reserverID: res.locals.id,
+      };
+      console.log(rawData);
+      const reqData: CancelTransactionRequest =
+        CancelTransactionRequest.parse(rawData);
+      await transactionService.cancelTransaction(reqData);
+      return res.status(HttpStatus.OK).json({
+        success: true,
+      });
+    } catch (err) {
+      const error = err as Error;
+      if (err instanceof z.ZodError) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false,
+          error: err.issues[0].message,
+        });
+      }
+      if (err instanceof AppErr) {
+        if (
+          err.code === HttpStatus.NOT_FOUND &&
+          err.message === "TRANSACTION_NOT_FOUND"
+        ) {
+          return res.status(HttpStatus.NOT_FOUND).json({
+            success: false,
+            error: "ไม่พบข้อมูลการจองดังกล่าวของคุณ",
+          });
+        }
+      }
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "ไม่สามารถยกเลิกการจองได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
+        error: error.message,
+      });
+    }
+  },
+
+  checkTransactionConflict: async (
+    req: Request,
+    res: Response,
+  ): Promise<Response> => {
+    try {
+      const cleanData = {
+        transactionId: [...new Set(req.body.transactionId)],
+      };
+      const reqData: CheckTransactionConflictRequest =
+        CheckTransactionConflictRequest.parse(cleanData);
+      const result = await transactionService.checkTransactionConflict(reqData);
+      return res.status(HttpStatus.OK).json({
+        success: true,
+        data: result,
+      });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false,
+          error: err.issues[0].message,
+        });
+      }
+      if (err instanceof AppErr) {
+        if (
+          err.code === HttpStatus.NOT_FOUND &&
+          err.message === "TRANSACTION_NOT_FOUND"
+        ) {
+          return res.status(HttpStatus.NOT_FOUND).json({
+            success: false,
+            error: "ไม่พบข้อมูลการจองบางรายการของผู้จองดังกล่าว",
+          });
+        }
+      }
+      const er = err as Error;
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message: "ไม่สามารถตรวจสอบการจองได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
         error: er.message,
       });
     }

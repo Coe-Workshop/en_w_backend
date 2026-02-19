@@ -1,5 +1,5 @@
 import { UserRole } from "@/pkg/models";
-import { NextFunction, Request, RequestHandler, Response } from "express"
+import { NextFunction, Request, RequestHandler, Response } from "express";
 import HttpStatus from "http-status";
 import { TempUser } from "../validator/user.schema";
 
@@ -13,41 +13,41 @@ const makeMiddleware = (): MiddlewareResources => ({
     return (req: Request, res: Response, next: NextFunction) => {
       const result = TempUser.safeParse(req.user);
       if (!result.success) {
-	return res.status(HttpStatus.FORBIDDEN).json({
-	  success: false,
-	  message: "ไม่มีสิทธิ์เข้าถึงข้อมูล",
-	  error: result.error
-	})
-      } 
+        return res.status(HttpStatus.FORBIDDEN).json({
+          success: false,
+          message: "ไม่มีสิทธิ์เข้าถึงข้อมูล",
+          error: result.error,
+        });
+      }
 
       if (result.data.role !== validRole) {
-	return res.status(HttpStatus.FORBIDDEN).json({
-	  success: false,
-	  message: "ไม่มีสิทธิ์เข้าถึงข้อมูล"
-	})
+        return res.status(HttpStatus.FORBIDDEN).json({
+          success: false,
+          message: "ไม่มีสิทธิ์เข้าถึงข้อมูล",
+        });
       }
 
       res.locals.role = result.data.role;
       res.locals.id = result.data.id;
       next();
-    }
+    };
   },
 
   reqAuthHandler: () => {
     return (req: Request, res: Response, next: NextFunction) => {
       const result = TempUser.safeParse(req.user);
       if (!result.success) {
-	return res.status(HttpStatus.FORBIDDEN).json({
-	  success: false,
-	  message: "คำขอไม่ถูกต้อง",
-	  error: result.error
-	})
-      } 
+        return res.status(HttpStatus.FORBIDDEN).json({
+          success: false,
+          message: "คำขอไม่ถูกต้อง",
+          error: result.error,
+        });
+      }
       res.locals.role = result.data.role;
       res.locals.id = result.data.id;
       next();
-    }
-  }
-})
+    };
+  },
+});
 
 export default makeMiddleware;

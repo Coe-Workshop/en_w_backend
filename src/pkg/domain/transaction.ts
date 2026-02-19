@@ -1,16 +1,24 @@
 import { DBTransaction } from "@/config/drizzle";
 import {
-  GetAllTransactionsByDate,
   GetAllTransactionsByItem,
+  GetAllTransactionsByStatus,
   GetAllTransactionsByUser,
   NewMessage,
   NewTransaction,
   Transaction,
+  transactionIdList,
+  transactionStatus,
+  UpdateTransactionsConflicts,
 } from "../models";
 import {
   CreateTransactionRequest,
-  GetAllTransactionsByDateRequest,
+  GetAllTransactionsByStatusRequest,
   GetAllTransactionsByUserRequest,
+  UpdateAllTransactionByUserRequest,
+  UpdateTransactionByIdRequest,
+  CancelTransactionRequest,
+  GetTransactionByItemIdRequest,
+  CheckTransactionConflictRequest,
 } from "@/internal/validator/transaction.schema";
 
 export interface TransactionService {
@@ -19,11 +27,21 @@ export interface TransactionService {
     req: GetAllTransactionsByUserRequest,
     page: number,
   ) => Promise<GetAllTransactionsByUser>;
-  getAllTransactionsByItem: (id: number) => Promise<GetAllTransactionsByItem[]>;
-  getAllTransactionsByDate: (
-    req: GetAllTransactionsByDateRequest,
+  getAllTransactionsByItem: (
+    req: GetTransactionByItemIdRequest,
+  ) => Promise<GetAllTransactionsByItem[]>;
+  getAllTransactionsByStatus: (
+    req: GetAllTransactionsByStatusRequest | undefined,
     page: number,
-  ) => Promise<GetAllTransactionsByDate[]>;
+  ) => Promise<GetAllTransactionsByStatus[]>;
+  updateTransactionById: (req: UpdateTransactionByIdRequest) => Promise<void>;
+  updateAllTransactionByUser: (
+    req: UpdateAllTransactionByUserRequest,
+  ) => Promise<void>;
+  cancelTransaction: (req: CancelTransactionRequest) => Promise<void>;
+  checkTransactionConflict: (
+    req: CheckTransactionConflictRequest,
+  ) => Promise<UpdateTransactionsConflicts>;
 }
 
 export interface TransactionRepository {
@@ -34,16 +52,32 @@ export interface TransactionRepository {
   ) => Promise<GetAllTransactionsByUser>;
   getAllTransactionsByItem: (
     db: DBTransaction,
-    id: number,
+    req: GetTransactionByItemIdRequest,
   ) => Promise<GetAllTransactionsByItem[]>;
-  getAllTransactionsByDate: (
+  getAllTransactionsByStatus: (
     db: DBTransaction,
-    date: Date,
+    status: transactionStatus | undefined,
     page: number,
-  ) => Promise<GetAllTransactionsByDate[]>;
+  ) => Promise<GetAllTransactionsByStatus[]>;
   createTransaction: (
     db: DBTransaction,
     transaction: NewTransaction,
   ) => Promise<Transaction>;
-  createMessage: (db: DBTransaction, message: NewMessage) => Promise<void>;
+  createMessage: (db: DBTransaction, message: NewMessage[]) => Promise<void>;
+  updateTransactionById: (
+    db: DBTransaction,
+    transaction: UpdateTransactionByIdRequest,
+  ) => Promise<transactionIdList[]>;
+  updateAllTransactionByUser: (
+    db: DBTransaction,
+    transactions: UpdateAllTransactionByUserRequest,
+  ) => Promise<transactionIdList[][]>;
+  cancelTransaction: (
+    db: DBTransaction,
+    transaction: CancelTransactionRequest,
+  ) => Promise<void>;
+  checkTransactionConflict: (
+    db: DBTransaction,
+    transactions: CheckTransactionConflictRequest,
+  ) => Promise<UpdateTransactionsConflicts>;
 }
