@@ -1,14 +1,14 @@
 import { DB } from "@/config/drizzle";
 import { ItemCategory } from "../models";
-import { ItemRepository, ItemService } from "../domain/item";
+import { ItemRepository, ItemService, ItemFilter } from "../domain/item";
 
 export const makeItemService = (
   db: DB,
   itemRepository: ItemRepository,
 ): ItemService => ({
-  getAllItems: async () => {
+  getItems: async (filter?: ItemFilter) => {
     return await db.transaction(async (tx) => {
-      return await itemRepository.getAllItems(tx);
+      return await itemRepository.getItems(tx, filter);
     });
   },
 

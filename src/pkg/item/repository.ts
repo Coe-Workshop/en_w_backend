@@ -1,4 +1,4 @@
-import { and, eq, gte, lt, sql } from "drizzle-orm";
+import { and, eq, gte, lt, sql, ilike } from "drizzle-orm";
 import { DatabaseError } from "pg";
 import { DrizzleQueryError } from "drizzle-orm/errors";
 import HttpStatus from "http-status";
@@ -9,7 +9,7 @@ import {
   items,
   transactions,
 } from "../models";
-import { ItemRepository } from "../domain/item";
+import { ItemRepository, ItemFilter } from "../domain/item";
 import { AppErr } from "@/utils/appErr";
 
 export const makeItemRepository = (): ItemRepository => ({
@@ -35,8 +35,18 @@ export const makeItemRepository = (): ItemRepository => ({
     }
   },
 
-  getAllItems: async (db) => {
+  getItems: async (db, filter?: ItemFilter) => {
     const right_now = sql`now()`;
+    const conditions: any[] = [];
+
+    if (filter?.category) {
+      conditions.push(eq(categories.name, filter.category));
+    }
+
+    if (filter?.search) {
+      conditions.push(ilike(items.name, `%${filter.search}%`));
+    }
+
     const result = await db
       .select({
         id: items.id,
@@ -64,6 +74,7 @@ export const makeItemRepository = (): ItemRepository => ({
           gte(transactions.endedAt, right_now),
         ),
       )
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
       .groupBy(items.id, categories.id)
       .orderBy(items.id);
     return result;

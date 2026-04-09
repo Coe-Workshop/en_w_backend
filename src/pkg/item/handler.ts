@@ -18,7 +18,7 @@ export const makeItemHandler = (
   const router = Router();
   const handler = itemHandler(itemService);
 
-  router.get("/", handler.getAllItems);
+  router.get("/", handler.getItems);
   router.get("/:id", handler.getItemByID);
   router.post("/", middleware.requireRoles(UserRole.ADMIN), handler.createItem);
   router.delete(
@@ -34,10 +34,15 @@ export const makeItemHandler = (
   return router;
 };
 
-const itemHandler = (itemService: ItemService) => ({
-  getAllItems: async (_: Request, res: Response): Promise<Response> => {
+export const itemHandler = (itemService: ItemService) => ({
+  getItems: async (req: Request, res: Response): Promise<Response> => {
     try {
-      const data = await itemService.getAllItems();
+      const { category, search } = req.query;
+      const filter = {
+        category: category as ItemCategory | undefined,
+        search: search as string | undefined,
+      };
+      const data = await itemService.getItems(filter);
       return res.status(HttpStatus.OK).json({
         success: true,
         data: {

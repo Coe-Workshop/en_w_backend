@@ -9,4 +9,8 @@ module.exports = {
   transform: {
     ...tsJestTransformCfg,
   },
+  moduleNameMapper: {
+    "^@/(.*)$": "<rootDir>/src/$1",
+  },
+  testMatch: ["**/__tests__/**/*.test.ts"],
 };
