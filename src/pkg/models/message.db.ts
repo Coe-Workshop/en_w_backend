@@ -9,7 +9,7 @@ export const messages = pgTable("messages", {
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
   detail: text("detail"),
-  transactionID: integer("transaction_id")
+  transactionID: integer("txn_id")
     .notNull()
     .references(() => transactions.id, { onDelete: "cascade" }),
 });
