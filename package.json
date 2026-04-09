@@ -9,7 +9,8 @@
     "build": "tsc",
     "lint": "eslint",
     "type-check": "tsc --noEmit",
-    "seed": "tsx scripts/seed-items.ts"
+    "seed": "tsx scripts/seed-items.ts",
+    "seed:transactions": "tsx scripts/seed-transactions.ts"
   },
   "devDependencies": {
     "@aws-sdk/client-s3": "^3.1027.0",
@@ -21,6 +22,7 @@
     "@types/jest": "30.0.0",
     "@types/multer": "^2.1.0",
     "@types/node": "24.10.1",
+    "@types/node-cron": "^3.0.11",
     "@types/passport": "1.0.17",
     "@types/passport-google-oauth20": "2.0.17",
     "@types/pg": "8.15.6",
@@ -52,6 +54,7 @@
     "express-session": "1.18.2",
     "http-status": "2.1.0",
     "jest": "30.1.3",
+    "node-cron": "^4.2.1",
     "passport": "0.7.0",
     "passport-google-oauth20": "2.0.0",
     "passport-local": "^1.0.0",

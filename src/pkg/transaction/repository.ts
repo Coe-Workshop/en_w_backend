@@ -431,6 +431,34 @@ export const makeTransactionRepository = (): TransactionRepository => ({
       throw err;
     }
   },
+
+  autoRejectExpiredTransactions: async (db) => {
+    try {
+      const now = new Date();
+      
+      // Find and update all RESERVE transactions where startedAt has passed
+      const expiredTransactions = await db
+        .update(transactions)
+        .set({
+          status: "REJECT",
+        })
+        .where(
+          and(
+            eq(transactions.status, "RESERVE"),
+            lt(transactions.startedAt, now)
+          )
+        )
+        .returning({
+          id: transactions.id,
+          startedAt: transactions.startedAt,
+          endedAt: transactions.endedAt,
+        });
+      
+      return expiredTransactions;
+    } catch (err) {
+      throw err;
+    }
+  },
 });
 
 export default makeTransactionRepository;

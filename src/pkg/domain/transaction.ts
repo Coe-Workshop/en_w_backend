@@ -80,4 +80,7 @@ export interface TransactionRepository {
     db: DBTransaction,
     transactions: CheckTransactionConflictRequest,
   ) => Promise<UpdateTransactionsConflicts>;
+  autoRejectExpiredTransactions: (
+    db: DBTransaction,
+  ) => Promise<{ id: number; startedAt: Date; endedAt: Date }[]>;
 }

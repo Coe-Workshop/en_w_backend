@@ -3,6 +3,8 @@ import session from "express-session";
 import passport from "@/config/passport";
 import setupRoutes from "./router";
 import { db } from "@/config/drizzle";
+import { TransactionScheduler } from "@/pkg/scheduler/transaction-scheduler";
+import makeTransactionRepository from "@/pkg/transaction/repository";
 
 const makeServer = () => {
   const app = express();
@@ -22,7 +24,6 @@ const makeServer = () => {
       res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
     }
 
-    // Handle Preflight
     if (req.method === 'OPTIONS') {
         return res.sendStatus(200);
     }
@@ -67,6 +68,10 @@ const makeServer = () => {
     const port = process.env.PORT || 8080;
 
     setupRoutes(app, db);
+
+    const transactionRepository = makeTransactionRepository();
+    const transactionScheduler = new TransactionScheduler(db, transactionRepository);
+    transactionScheduler.start();
 
     app.listen(port, () => {
       console.log(`COE Workshop Backend Service listening on port ${port}`);
