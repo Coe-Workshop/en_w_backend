@@ -73,7 +73,3 @@ jobs:
           IMAGE_NAME=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')
           kubectl set image deployment/backend backend=${{ env.REGISTRY }}/${IMAGE_NAME}:${IMAGE_TAG} -n libreserve
           kubectl rollout status deployment/backend -n libreserve --timeout=120s
-
-      - name: Disconnect Tailscale
-        if: always() && !env.ACT
-        run: tailscale logout
