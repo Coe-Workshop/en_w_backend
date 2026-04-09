@@ -10,6 +10,8 @@ import { itemCategory, ItemCategory, UserRole, Item } from "../models";
 import { ItemService } from "../domain/item";
 import { AppErr } from "@/utils/appErr";
 import { MiddlewareResources } from "@/internal/middleware/auth";
+import { s3Service } from "@/pkg/upload/s3.service";
+import { uploadMiddleware } from "@/pkg/upload/upload.middleware";
 
 export const makeItemHandler = (
   itemService: ItemService,
@@ -20,7 +22,12 @@ export const makeItemHandler = (
 
   router.get("/", handler.getItems);
   router.get("/:id", handler.getItemByID);
-  router.post("/", middleware.requireRoles(UserRole.ADMIN), handler.createItem);
+  router.post(
+    "/",
+    middleware.requireRoles(UserRole.ADMIN),
+    uploadMiddleware.single("image"),
+    handler.createItem,
+  );
   router.delete(
     "/:id",
     middleware.requireRoles(UserRole.ADMIN),
@@ -29,6 +36,7 @@ export const makeItemHandler = (
   router.patch(
     "/:id",
     middleware.requireRoles(UserRole.ADMIN),
+    uploadMiddleware.single("image"),
     handler.updateItem,
   );
   return router;
@@ -102,6 +110,10 @@ export const itemHandler = (itemService: ItemService) => ({
 
   createItem: async (req: Request, res: Response): Promise<Response> => {
     try {
+      console.log("DEBUG - req.body:", req.body);
+      console.log("DEBUG - req.file:", req.file);
+      console.log("DEBUG - content-type:", req.headers["content-type"]);
+      console.log("DEBUG - isAuthenticated:", (req as any).isAuthenticated?.());
       const reqData: CreateItemRequest = CreateItemRequest.parse(req.body);
 
       const categoryName = reqData.categoryName as ItemCategory;
@@ -112,7 +124,44 @@ export const itemHandler = (itemService: ItemService) => ({
         });
       }
 
-      const item = await itemService.createItem(reqData);
+      let imageUrl: string | undefined = undefined;
+
+      if (req.file) {
+        if (!s3Service.isValidImageType(req.file.mimetype)) {
+          return res.status(HttpStatus.BAD_REQUEST).json({
+            success: false,
+            error: "Invalid file type. Only images are allowed (png, jpg, jpeg, gif, webp)",
+          });
+        }
+
+        if (!s3Service.isValidFileSize(req.file.size)) {
+          return res.status(HttpStatus.BAD_REQUEST).json({
+            success: false,
+            error: "File size exceeds maximum limit of 5MB",
+          });
+        }
+
+        console.log("DEBUG - Starting S3 upload...");
+        try {
+          const key = await s3Service.uploadFile(
+            req.file.buffer,
+            req.file.mimetype,
+            req.file.originalname
+          );
+          imageUrl = s3Service.getPublicUrl(key);
+          console.log("DEBUG - S3 upload success, URL:", imageUrl);
+        } catch (uploadError) {
+          console.error("DEBUG - S3 upload failed:", uploadError);
+          throw uploadError;
+        }
+      }
+
+      const itemData = {
+        ...reqData,
+        imageUrl,
+      };
+
+      const item = await itemService.createItem(itemData);
       const data = {
         ...item,
         categoryName: categoryName,
@@ -153,6 +202,19 @@ export const itemHandler = (itemService: ItemService) => ({
   deleteItemByID: async (req: Request, res: Response): Promise<Response> => {
     try {
       const id: ItemIdRequest = ItemIdRequest.parse(req.params.id);
+
+      const item = await itemService.getItemByID(id);
+
+      if (item?.imageUrl) {
+        try {
+          const key = item.imageUrl.split(".amazonaws.com/")[1];
+          if (key) {
+            await s3Service.deleteFile(key);
+          }
+        } catch (s3Err) {
+          console.error("Failed to delete image from S3:", s3Err);
+        }
+      }
 
       await itemService.deleteItemByID(id);
       return res.status(HttpStatus.OK).json({
@@ -211,8 +273,9 @@ export const itemHandler = (itemService: ItemService) => ({
         });
       }
 
-      let isChanged = false;
       const current = await itemService.getItemByID(id);
+      let updateData = { ...reqData };
+      let isChanged = false;
 
       for (let [key, newValue] of Object.entries(reqData)) {
         if (key === "category_name") {
@@ -226,6 +289,41 @@ export const itemHandler = (itemService: ItemService) => ({
         }
       }
 
+      if (req.file) {
+        if (!s3Service.isValidImageType(req.file.mimetype)) {
+          return res.status(HttpStatus.BAD_REQUEST).json({
+            success: false,
+            error: "Invalid file type. Only images are allowed (png, jpg, jpeg, gif, webp)",
+          });
+        }
+
+        if (!s3Service.isValidFileSize(req.file.size)) {
+          return res.status(HttpStatus.BAD_REQUEST).json({
+            success: false,
+            error: "File size exceeds maximum limit of 5MB",
+          });
+        }
+
+        if (current?.imageUrl) {
+          try {
+            const oldKey = current.imageUrl.split(".amazonaws.com/")[1];
+            if (oldKey) {
+              await s3Service.deleteFile(oldKey);
+            }
+          } catch (s3Err) {
+            console.error("Failed to delete old image from S3:", s3Err);
+          }
+        }
+
+        const key = await s3Service.uploadFile(
+          req.file.buffer,
+          req.file.mimetype,
+          req.file.originalname
+        );
+        updateData.imageUrl = s3Service.getPublicUrl(key);
+        isChanged = true;
+      }
+
       if (!isChanged) {
         return res.status(HttpStatus.OK).json({
           success: true,
@@ -234,7 +332,7 @@ export const itemHandler = (itemService: ItemService) => ({
         });
       }
 
-      const updated = await itemService.updateItem(id, reqData);
+      const updated = await itemService.updateItem(id, updateData);
 
       const data = {
         ...updated,

@@ -1,7 +1,7 @@
 import dotenv from "dotenv";
 import makeServer from "./internal/server/server";
 
-dotenv.config
+dotenv.config()
 
 try {
   const server = makeServer();

@@ -15,6 +15,8 @@ import { makeAssetHandler } from "@/pkg/asset/handler";
 import makeTransactionRepository from "@/pkg/transaction/repository";
 import makeTransactionService from "@/pkg/transaction/service";
 import { makeTransactionHandler } from "@/pkg/transaction/handler";
+import { makeUploadHandler } from "@/pkg/upload";
+import { uploadMiddleware } from "@/pkg/upload/upload.middleware";
 
 const setupRoutes = (app: Express, db: DB) => {
   const userRepository = makeUserRepository();
@@ -30,10 +32,13 @@ const setupRoutes = (app: Express, db: DB) => {
   const itemHandler = makeItemHandler(itemService, middleware);
   const assetHandler = makeAssetHandler(assetService, middleware);
   const transactionHandler = makeTransactionHandler(transactionService, middleware);
+  const uploadHandler = makeUploadHandler();
+
   app.use("/api/v1/auth", authHandler);
   app.use("/api/v1/items", itemHandler);
   app.use("/api/v1/assets", assetHandler);
   app.use("/api/v1/transactions", transactionHandler);
+  app.use("/api/v1/upload", middleware.reqAuthHandler(), uploadMiddleware.single("image"), uploadHandler);
 
   const userService = makeUserService(db, userRepository);
   const userHandler = makeUserHandler(userService);

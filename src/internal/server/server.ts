@@ -29,8 +29,22 @@ const makeServer = () => {
     next();
   });
 
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+  app.use((req, res, next) => {
+    const contentType = req.headers['content-type'] || '';
+    if (contentType.includes('multipart/form-data')) {
+      return next();
+    }
+    express.json()(req, res, next);
+  });
+  app.use((req, res, next) => {
+    const contentType = req.headers['content-type'] || '';
+    if (contentType.includes('multipart/form-data')) {
+      return next();
+    }
+    express.urlencoded({ extended: true })(req, res, next);
+  });
+
+  const isProduction = process.env.NODE_ENV === "production";
 
   app.use(
     session({
@@ -38,10 +52,10 @@ const makeServer = () => {
       resave: false,
       saveUninitialized: false,
       cookie: {
-        secure: true,
+        secure: isProduction,
         httpOnly: true,
         maxAge: 24 * 60 * 60 * 1000,
-        sameSite: "lax",
+        sameSite: isProduction ? "none" : "lax",
       },
     }),
   );
