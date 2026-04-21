@@ -33,7 +33,7 @@ export interface TransactionService {
   getAllTransactionsByStatus: (
     req: GetAllTransactionsByStatusRequest | undefined,
     page: number,
-  ) => Promise<GetAllTransactionsByStatus[]>;
+  ) => Promise<{ numberOfPage: number; users: GetAllTransactionsByStatus[] }>;
   updateTransactionById: (req: UpdateTransactionByIdRequest) => Promise<void>;
   updateAllTransactionByUser: (
     req: UpdateAllTransactionByUserRequest,
@@ -58,7 +58,7 @@ export interface TransactionRepository {
     db: DBTransaction,
     status: transactionStatus | undefined,
     page: number,
-  ) => Promise<GetAllTransactionsByStatus[]>;
+  ) => Promise<{ numberOfPage: number; users: GetAllTransactionsByStatus[] }>;
   createTransaction: (
     db: DBTransaction,
     transaction: NewTransaction,

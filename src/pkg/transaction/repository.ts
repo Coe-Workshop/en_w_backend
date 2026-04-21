@@ -281,6 +281,13 @@ export const makeTransactionRepository = (): TransactionRepository => ({
   getAllTransactionsByStatus: async (db, status, page) => {
     const isFiltered = status ? eq(transactions.status, status) : undefined;
 
+    const totalUsers = await db
+      .select({ count: sql<number>`count(distinct ${transactions.reserverID})` })
+      .from(transactions)
+      .where(isFiltered);
+
+    const numberOfPage = Math.ceil(totalUsers[0].count / 15);
+
     const userIds = await db
       .selectDistinct({
         reserverID: transactions.reserverID,
@@ -336,7 +343,7 @@ export const makeTransactionRepository = (): TransactionRepository => ({
       });
     }
 
-    return result;
+    return { numberOfPage, users: result };
   },
 
   createTransaction: async (db, transaction) => {
