@@ -32,11 +32,13 @@ export interface Transaction {
 }
 
 export type AdminTransactions = {
+  id: number;
   itemName: string;
   assetID: string;
   startedAt: Date;
   endedAt: Date;
   status: transactionStatus;
+  message: string;
 };
 export interface GetAllTransactionsByStatus {
   user: {

@@ -12,7 +12,7 @@ describe("TransactionScheduler", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     mockScheduledTask = {
       stop: jest.fn(),
     };
@@ -25,7 +25,7 @@ describe("TransactionScheduler", () => {
 
     mockRepository = {
       getAllTransactionsByUser: jest.fn(),
-      getAllTransactionsByItem: jest.fn(),
+      getApprovedBookingsByItem: jest.fn(),
       getAllTransactionsByStatus: jest.fn(),
       createTransaction: jest.fn(),
       createMessage: jest.fn(),
@@ -43,7 +43,10 @@ describe("TransactionScheduler", () => {
     it("should schedule job to run every 30 minutes", () => {
       scheduler.start();
 
-      expect(cron.schedule).toHaveBeenCalledWith("*/30 * * * *", expect.any(Function));
+      expect(cron.schedule).toHaveBeenCalledWith(
+        "*/30 * * * *",
+        expect.any(Function),
+      );
     });
 
     it("should run immediately on startup", async () => {
@@ -78,14 +81,24 @@ describe("TransactionScheduler", () => {
   describe("auto-reject job", () => {
     it("should reject expired transactions", async () => {
       const expiredTransactions = [
-        { id: 1, startedAt: new Date("2026-04-10T10:00:00Z"), endedAt: new Date("2026-04-10T11:00:00Z") },
-        { id: 2, startedAt: new Date("2026-04-10T09:00:00Z"), endedAt: new Date("2026-04-10T10:00:00Z") },
+        {
+          id: 1,
+          startedAt: new Date("2026-04-10T10:00:00Z"),
+          endedAt: new Date("2026-04-10T11:00:00Z"),
+        },
+        {
+          id: 2,
+          startedAt: new Date("2026-04-10T09:00:00Z"),
+          endedAt: new Date("2026-04-10T10:00:00Z"),
+        },
       ];
 
       mockDb.transaction.mockImplementation(async (callback: any) => {
         return await callback(mockDb);
       });
-      mockRepository.autoRejectExpiredTransactions.mockResolvedValue(expiredTransactions);
+      mockRepository.autoRejectExpiredTransactions.mockResolvedValue(
+        expiredTransactions,
+      );
 
       scheduler.start();
 
@@ -113,7 +126,7 @@ describe("TransactionScheduler", () => {
 
     it("should handle errors gracefully", async () => {
       const consoleSpy = jest.spyOn(console, "error").mockImplementation();
-      
+
       mockDb.transaction.mockRejectedValue(new Error("Database error"));
 
       scheduler.start();
@@ -123,7 +136,7 @@ describe("TransactionScheduler", () => {
 
       expect(consoleSpy).toHaveBeenCalledWith(
         "[Scheduler] Error auto-rejecting expired transactions:",
-        expect.any(Error)
+        expect.any(Error),
       );
 
       consoleSpy.mockRestore();

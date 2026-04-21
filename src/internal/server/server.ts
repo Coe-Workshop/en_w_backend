@@ -5,6 +5,7 @@ import setupRoutes from "./router";
 import { db } from "@/config/drizzle";
 import { TransactionScheduler } from "@/pkg/scheduler/transaction-scheduler";
 import makeTransactionRepository from "@/pkg/transaction/repository";
+import { createLoggerMiddleware } from "@/internal/logger/logger";
 
 const makeServer = () => {
   const app = express();
@@ -29,6 +30,8 @@ const makeServer = () => {
     }
     next();
   });
+
+  app.use(createLoggerMiddleware());
 
   app.use((req, res, next) => {
     const contentType = req.headers['content-type'] || '';

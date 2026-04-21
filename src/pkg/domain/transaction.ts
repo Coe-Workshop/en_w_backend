@@ -17,7 +17,7 @@ import {
   UpdateAllTransactionByUserRequest,
   UpdateTransactionByIdRequest,
   CancelTransactionRequest,
-  GetTransactionByItemIdRequest,
+  GetApprovedBookingsByItemRequest,
   CheckTransactionConflictRequest,
 } from "@/internal/validator/transaction.schema";
 
@@ -27,8 +27,8 @@ export interface TransactionService {
     req: GetAllTransactionsByUserRequest,
     page: number,
   ) => Promise<GetAllTransactionsByUser>;
-  getAllTransactionsByItem: (
-    req: GetTransactionByItemIdRequest,
+  getApprovedBookingsByItem: (
+    req: GetApprovedBookingsByItemRequest,
   ) => Promise<GetAllTransactionsByItem[]>;
   getAllTransactionsByStatus: (
     req: GetAllTransactionsByStatusRequest | undefined,
@@ -50,9 +50,9 @@ export interface TransactionRepository {
     id: string,
     page: number,
   ) => Promise<GetAllTransactionsByUser>;
-  getAllTransactionsByItem: (
+  getApprovedBookingsByItem: (
     db: DBTransaction,
-    req: GetTransactionByItemIdRequest,
+    req: GetApprovedBookingsByItemRequest,
   ) => Promise<GetAllTransactionsByItem[]>;
   getAllTransactionsByStatus: (
     db: DBTransaction,

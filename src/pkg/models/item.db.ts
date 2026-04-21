@@ -43,7 +43,6 @@ export const itemsRelations = relations(items, ({ one, many }) => ({
 }));
 
 export const itemCategory = pgEnum("item_category", [
-  "ELECTRONIC",
   "MECHANICAL",
   "ELECTRICAL",
   "PNEUMATIC",
@@ -59,6 +58,7 @@ export const itemCategory = pgEnum("item_category", [
   "THREE_D_PRINTING",
   "CNC",
   "MAINTENANCE",
+  "OTHER",
 ]);
 
 export const categories = pgTable("categories", {

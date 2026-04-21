@@ -8,7 +8,7 @@ import {
   CreateTransactionRequest,
   GetAllTransactionsByStatusRequest,
   GetAllTransactionsByUserRequest,
-  GetTransactionByItemIdRequest,
+  GetApprovedBookingsByItemRequest,
   pageNumberRequest,
   UpdateAllTransactionByUserRequest,
   UpdateTransactionByIdRequest,
@@ -43,7 +43,7 @@ export const makeTransactionHandler = (
   router.get(
     "/by-item",
     middleware.requireRoles(UserRole.ADMIN),
-    handler.getAllTransactionsByItem,
+    handler.getApprovedBookingsByItem,
   );
   router.get(
     "/by-user",
@@ -108,7 +108,7 @@ const transactionHandler = (transactionService: TransactionService) => ({
     }
   },
 
-  getAllTransactionsByItem: async (
+  getApprovedBookingsByItem: async (
     req: Request,
     res: Response,
   ): Promise<Response> => {
@@ -117,9 +117,10 @@ const transactionHandler = (transactionService: TransactionService) => ({
         itemId: req.query.item,
         date: req.query.date,
       };
-      const reqData: GetTransactionByItemIdRequest =
-        GetTransactionByItemIdRequest.parse(rawData);
-      const result = await transactionService.getAllTransactionsByItem(reqData);
+      const reqData: GetApprovedBookingsByItemRequest =
+        GetApprovedBookingsByItemRequest.parse(rawData);
+      const result =
+        await transactionService.getApprovedBookingsByItem(reqData);
       return res.status(HttpStatus.OK).json({
         success: true,
         data: result[0],

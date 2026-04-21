@@ -1,11 +1,11 @@
 import z from "zod";
 
-export const GetTransactionByItemIdRequest = z.object({
+export const GetApprovedBookingsByItemRequest = z.object({
   itemId: z.coerce
-    .number("ไอดีของอุปกรณ์ต้องเป็นตัวเลข")
-    .min(1, "ไอดีของอุปกรณ์ต้องมากกว่า 0")
-    .max(2147483647, "ไม่พบอุปกรณ์ดังกล่าว")
-    .int("ไอดีของอุปกรณ์ต้องเป็นจำนวนเต็ม"),
+    .number("ไอดีของอุปกณ์ต้องเป็นตัวเลข")
+    .min(1, "ไอดีของอุปกณ์ต้องมากกว่า 0")
+    .max(2147483647, "ไม่พบอุปกณ์ดังกล่าว")
+    .int("ไอดีของอุปกณ์ต้องเป็นจำนวนเต็ม"),
   date: z
     .string("กรุณาเลือกวันที่จอง")
     .trim()
@@ -173,8 +173,8 @@ export type GetAllTransactionsByStatusRequest = z.infer<
 >;
 export type pageNumberRequest = z.infer<typeof pageNumberRequest>;
 
-export type GetTransactionByItemIdRequest = z.infer<
-  typeof GetTransactionByItemIdRequest
+export type GetApprovedBookingsByItemRequest = z.infer<
+  typeof GetApprovedBookingsByItemRequest
 >;
 export type GetAllTransactionsByUserRequest = z.infer<
   typeof GetAllTransactionsByUserRequest

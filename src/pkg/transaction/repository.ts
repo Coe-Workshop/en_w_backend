@@ -72,7 +72,7 @@ export const makeTransactionRepository = (): TransactionRepository => ({
     return report;
   },
 
-  getAllTransactionsByItem: async (db, reqData) => {
+  getApprovedBookingsByItem: async (db, reqData) => {
     const isExist = await db.query.items.findFirst({
       where: eq(items.id, reqData.itemId),
     });
@@ -103,6 +103,7 @@ export const makeTransactionRepository = (): TransactionRepository => ({
             'user', json_build_object(
               'phone',  transactions.phone,
               'userName', transactions.firstName || ' ' || transactions.lastName,
+	      // replace this with reserver's google profile picture.
               'profileUrl', 'https://gear.kku.ac.th/wp-content/uploads/2025/05/wasu.jpg'
             )
           )
@@ -278,47 +279,62 @@ export const makeTransactionRepository = (): TransactionRepository => ({
   },
 
   getAllTransactionsByStatus: async (db, status, page) => {
-    const sortPeople = [];
-    if (status === "RESERVE") {
-      sortPeople.push(
-        sql`MIN(${transactions.startedAt}) ASC`,
-        sql`MIN(${transactions.createdAt}) ASC`,
-      );
-    } else {
-      sortPeople.push(sql`MAX(${transactions.createdAt}) DESC`);
-    }
     const isFiltered = status ? eq(transactions.status, status) : undefined;
-    const innerSort =
-      status === "RESERVE"
-        ? sql`${transactions.startedAt} ASC`
-        : sql`${transactions.createdAt} DESC`;
-    const result = await db
-      .select({
-        user: {
+
+    const userIds = await db
+      .selectDistinct({
+        reserverID: transactions.reserverID,
+      })
+      .from(transactions)
+      .where(isFiltered)
+      .orderBy(transactions.reserverID)
+      .limit(15)
+      .offset((page - 1) * 15);
+
+    const result = [];
+    for (const { reserverID } of userIds) {
+      const userInfo = await db
+        .select({
           phone: users.phone,
           userName: sql<string>`${users.firstName} || ' ' || ${users.lastName}`,
           profileUrl: sql<string>`'https://gear.kku.ac.th/wp-content/uploads/2025/05/wasu.jpg'`,
-        },
-        adminTransactions: sql<AdminTransactions[]>`jsonb_agg(
-        json_build_object(
-          'itemName', ${items.name},
-          'assetID', ${assets.assetID},
-          'startedAt', ${transactions.startedAt},
-          'endedAt', ${transactions.endedAt},
-          'status', ${transactions.status}
-        ) ORDER BY 
-            ${innerSort}
-      )`,
-      })
-      .from(transactions)
-      .leftJoin(assets, eq(assets.id, transactions.assetID))
-      .leftJoin(items, eq(items.id, transactions.itemID))
-      .leftJoin(users, eq(users.id, transactions.reserverID))
-      .where(isFiltered)
-      .groupBy(users.phone, users.firstName, users.lastName)
-      .orderBy(...sortPeople)
-      .offset((page - 1) * 15)
-      .limit(15);
+        })
+        .from(users)
+        .where(eq(users.id, reserverID))
+        .limit(1);
+
+      if (userInfo.length === 0) continue;
+
+      const orderBy = status === "RESERVE"
+        ? [asc(transactions.startedAt), asc(transactions.createdAt)]
+        : [desc(transactions.createdAt)];
+
+      const userTransactions = await db
+        .select({
+          id: transactions.id,
+          itemName: sql<string>`COALESCE(${items.name}, 'Unknown')`,
+          assetID: sql<string>`COALESCE(${assets.assetID}, 'N/A')`,
+          startedAt: transactions.startedAt,
+          endedAt: transactions.endedAt,
+          status: transactions.status,
+          message: sql<string>`COALESCE((SELECT detail FROM messages WHERE txn_id = ${transactions.id} LIMIT 1), 'no message attach')`,
+        })
+        .from(transactions)
+        .leftJoin(assets, eq(assets.id, transactions.assetID))
+        .leftJoin(items, eq(items.id, transactions.itemID))
+        .where(
+          and(
+            eq(transactions.reserverID, reserverID),
+            isFiltered
+          )
+        )
+        .orderBy(...orderBy);
+
+      result.push({
+        user: userInfo[0],
+        adminTransactions: userTransactions,
+      });
+    }
 
     return result;
   },
@@ -435,7 +451,7 @@ export const makeTransactionRepository = (): TransactionRepository => ({
   autoRejectExpiredTransactions: async (db) => {
     try {
       const now = new Date();
-      
+
       // Find and update all RESERVE transactions where startedAt has passed
       const expiredTransactions = await db
         .update(transactions)
@@ -445,15 +461,15 @@ export const makeTransactionRepository = (): TransactionRepository => ({
         .where(
           and(
             eq(transactions.status, "RESERVE"),
-            lt(transactions.startedAt, now)
-          )
+            lt(transactions.startedAt, now),
+          ),
         )
         .returning({
           id: transactions.id,
           startedAt: transactions.startedAt,
           endedAt: transactions.endedAt,
         });
-      
+
       return expiredTransactions;
     } catch (err) {
       throw err;

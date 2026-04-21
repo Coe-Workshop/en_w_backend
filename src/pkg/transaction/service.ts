@@ -18,9 +18,9 @@ export const makeTransactionService = (
     });
   },
 
-  getAllTransactionsByItem: async (itemID) => {
+  getApprovedBookingsByItem: async (itemID) => {
     return await db.transaction(async (tx) => {
-      return await transactionRepository.getAllTransactionsByItem(tx, itemID);
+      return await transactionRepository.getApprovedBookingsByItem(tx, itemID);
     });
   },
 
