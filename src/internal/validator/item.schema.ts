@@ -1,5 +1,29 @@
 import z from "zod";
 
+export const GetItemsQueryRequest = z.object({
+  category: z
+    .enum([
+      "MECHANICAL",
+      "ELECTRICAL",
+      "PNEUMATIC",
+      "HYDRAULIC",
+      "MEASUREMENT",
+      "SOLDERING",
+      "HAND_TOOLS",
+      "POWER_TOOLS",
+      "SAFETY",
+      "ROBOTICS",
+      "AUTOMATION",
+      "PROTOTYPING",
+      "THREE_D_PRINTING",
+      "CNC",
+      "MAINTENANCE",
+      "OTHER",
+    ])
+    .optional(),
+  search: z.string().trim().optional(),
+});
+
 export const CreateItemRequest = z.object(
   {
     name: z
@@ -77,3 +101,4 @@ export const UpdateItemRequest = z
 export type CreateItemRequest = z.infer<typeof CreateItemRequest>;
 export type ItemIdRequest = z.infer<typeof ItemIdRequest>;
 export type UpdateItemRequest = z.infer<typeof UpdateItemRequest>;
+export type GetItemsQueryRequest = z.infer<typeof GetItemsQueryRequest>;

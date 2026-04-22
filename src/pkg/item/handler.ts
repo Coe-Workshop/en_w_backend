@@ -3,6 +3,7 @@ import { z } from "zod";
 import HttpStatus from "http-status";
 import {
   CreateItemRequest,
+  GetItemsQueryRequest,
   ItemIdRequest,
   UpdateItemRequest,
 } from "@/internal/validator/item.schema";
@@ -45,11 +46,16 @@ export const makeItemHandler = (
 export const itemHandler = (itemService: ItemService) => ({
   getItems: async (req: Request, res: Response): Promise<Response> => {
     try {
-      const { category, search } = req.query;
-      const filter = {
-        category: category as ItemCategory | undefined,
-        search: search as string | undefined,
-      };
+      const filter: GetItemsQueryRequest = GetItemsQueryRequest.parse({
+        category:
+          req.query.category === "null" || req.query.category === "undefined"
+            ? undefined
+            : req.query.category,
+        search:
+          req.query.search === "null" || req.query.search === "undefined"
+            ? undefined
+            : req.query.search,
+      });
       const data = await itemService.getItems(filter);
       return res.status(HttpStatus.OK).json({
         success: true,
@@ -59,6 +65,12 @@ export const itemHandler = (itemService: ItemService) => ({
         },
       });
     } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false,
+          error: error.issues[0].message,
+        });
+      }
       const err = error as Error;
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false,

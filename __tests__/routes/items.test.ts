@@ -32,8 +32,8 @@ describe("Item Handler - getItems", () => {
       } as unknown as Request;
 
       mockItemService.getItems.mockResolvedValue([
-        { id: 1, name: "Item 1", categoryName: "MACHINE" as ItemCategory, description: null, imageUrl: null },
-        { id: 2, name: "Item 2", categoryName: "ELECTRONIC" as ItemCategory, description: null, imageUrl: null },
+        { id: 1, name: "Item 1", categoryName: "MECHANICAL" as ItemCategory, description: null, imageUrl: null },
+        { id: 2, name: "Item 2", categoryName: "ELECTRICAL" as ItemCategory, description: null, imageUrl: null },
       ]);
 
       await handler.getItems(mockRequest, mockResponse as Response);
@@ -50,8 +50,8 @@ describe("Item Handler - getItems", () => {
       } as unknown as Request;
 
       const mockItems = [
-        { id: 1, name: "Item 1", categoryName: "MACHINE" as ItemCategory, description: null, imageUrl: null },
-        { id: 2, name: "Item 2", categoryName: "ELECTRONIC" as ItemCategory, description: null, imageUrl: null },
+        { id: 1, name: "Item 1", categoryName: "MECHANICAL" as ItemCategory, description: null, imageUrl: null },
+        { id: 2, name: "Item 2", categoryName: "ELECTRICAL" as ItemCategory, description: null, imageUrl: null },
       ];
 
       mockItemService.getItems.mockResolvedValue(mockItems);
@@ -72,28 +72,28 @@ describe("Item Handler - getItems", () => {
   describe("with category filter", () => {
     it("should call getItems with category filter", async () => {
       const mockRequest = {
-        query: { category: "MACHINE" },
+        query: { category: "MECHANICAL" },
       } as unknown as Request;
 
       mockItemService.getItems.mockResolvedValue([
-        { id: 1, name: "Machine Item", categoryName: "MACHINE" as ItemCategory, description: null, imageUrl: null },
+        { id: 1, name: "Machine Item", categoryName: "MECHANICAL" as ItemCategory, description: null, imageUrl: null },
       ]);
 
       await handler.getItems(mockRequest, mockResponse as Response);
 
       expect(mockItemService.getItems).toHaveBeenCalledWith({
-        category: "MACHINE",
+        category: "MECHANICAL",
         search: undefined,
       });
     });
 
     it("should return filtered items by category", async () => {
       const mockRequest = {
-        query: { category: "ELECTRONIC" },
+        query: { category: "ELECTRICAL" },
       } as unknown as Request;
 
       const mockItems = [
-        { id: 2, name: "Electronic Item", categoryName: "ELECTRONIC" as ItemCategory, description: null, imageUrl: null },
+        { id: 2, name: "Electronic Item", categoryName: "ELECTRICAL" as ItemCategory, description: null, imageUrl: null },
       ];
 
       mockItemService.getItems.mockResolvedValue(mockItems);
@@ -118,7 +118,7 @@ describe("Item Handler - getItems", () => {
       } as unknown as Request;
 
       mockItemService.getItems.mockResolvedValue([
-        { id: 1, name: "Drill Machine", categoryName: "MACHINE" as ItemCategory, description: null, imageUrl: null },
+        { id: 1, name: "Drill Machine", categoryName: "MECHANICAL" as ItemCategory, description: null, imageUrl: null },
       ]);
 
       await handler.getItems(mockRequest, mockResponse as Response);
@@ -135,7 +135,7 @@ describe("Item Handler - getItems", () => {
       } as unknown as Request;
 
       const mockItems = [
-        { id: 3, name: "Screwdriver Set", categoryName: "HANDTOOL" as ItemCategory, description: null, imageUrl: null },
+        { id: 3, name: "Screwdriver Set", categoryName: "HAND_TOOLS" as ItemCategory, description: null, imageUrl: null },
       ];
 
       mockItemService.getItems.mockResolvedValue(mockItems);
@@ -156,28 +156,28 @@ describe("Item Handler - getItems", () => {
   describe("with both category and search filters", () => {
     it("should call getItems with both filters", async () => {
       const mockRequest = {
-        query: { category: "ELECTRONIC", search: "arduino" },
+        query: { category: "ELECTRICAL", search: "arduino" },
       } as unknown as Request;
 
       mockItemService.getItems.mockResolvedValue([
-        { id: 1, name: "Arduino Board", categoryName: "ELECTRONIC" as ItemCategory, description: null, imageUrl: null },
+        { id: 1, name: "Arduino Board", categoryName: "ELECTRICAL" as ItemCategory, description: null, imageUrl: null },
       ]);
 
       await handler.getItems(mockRequest, mockResponse as Response);
 
       expect(mockItemService.getItems).toHaveBeenCalledWith({
-        category: "ELECTRONIC",
+        category: "ELECTRICAL",
         search: "arduino",
       });
     });
 
     it("should return items matching both filters", async () => {
       const mockRequest = {
-        query: { category: "MACHINE", search: "lathe" },
+        query: { category: "MECHANICAL", search: "lathe" },
       } as unknown as Request;
 
       const mockItems = [
-        { id: 5, name: "Lathe Machine", categoryName: "MACHINE" as ItemCategory, description: null, imageUrl: null },
+        { id: 5, name: "Lathe Machine", categoryName: "MECHANICAL" as ItemCategory, description: null, imageUrl: null },
       ];
 
       mockItemService.getItems.mockResolvedValue(mockItems);
@@ -210,6 +210,56 @@ describe("Item Handler - getItems", () => {
         success: false,
         message: "ไม่สามารถเข้าถึงข้อมูลอุปกรณ์ทั้งหมดได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
         error: "Database error",
+      });
+    });
+
+    it("should return 400 on invalid enum value", async () => {
+      const mockRequest = {
+        query: { category: "INVALID_CATEGORY" },
+      } as unknown as Request;
+
+      await handler.getItems(mockRequest, mockResponse as Response);
+
+      expect(mockResponse.status).toHaveBeenCalledWith(400);
+      expect(mockResponse.json).toHaveBeenCalledWith({
+        success: false,
+        error: expect.any(String),
+      });
+    });
+  });
+
+  describe("null string handling", () => {
+    it('should treat "null" string as undefined for category', async () => {
+      const mockRequest = {
+        query: { category: "null" },
+      } as unknown as Request;
+
+      mockItemService.getItems.mockResolvedValue([
+        { id: 1, name: "Item 1", categoryName: "MECHANICAL" as ItemCategory, description: null, imageUrl: null },
+      ]);
+
+      await handler.getItems(mockRequest, mockResponse as Response);
+
+      expect(mockItemService.getItems).toHaveBeenCalledWith({
+        category: undefined,
+        search: undefined,
+      });
+    });
+
+    it('should treat "undefined" string as undefined for search', async () => {
+      const mockRequest = {
+        query: { search: "undefined" },
+      } as unknown as Request;
+
+      mockItemService.getItems.mockResolvedValue([
+        { id: 1, name: "Item 1", categoryName: "MECHANICAL" as ItemCategory, description: null, imageUrl: null },
+      ]);
+
+      await handler.getItems(mockRequest, mockResponse as Response);
+
+      expect(mockItemService.getItems).toHaveBeenCalledWith({
+        category: undefined,
+        search: undefined,
       });
     });
   });
