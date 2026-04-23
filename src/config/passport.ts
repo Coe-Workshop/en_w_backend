@@ -35,15 +35,23 @@ passport.use(
       done: VerifyCallback,
     ) => {
       const email = profile.emails?.[0].value || "";
+      const photo = profile.photos?.[0]?.value || undefined;
 
       let user: TempUser;
 
       try {
-        user = await userService.getUserByEmail(email);
+        const dbUser = await userService.getUserByEmail(email);
+        user = {
+          id: dbUser.id,
+          email: dbUser.email,
+          role: dbUser.role,
+          photo: dbUser.photo ?? undefined,
+        };
       } catch (err) {
         user = {
           email: email,
           role: UserRole.RESERVER,
+          photo,
         };
       }
 

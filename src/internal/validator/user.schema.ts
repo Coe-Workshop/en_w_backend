@@ -5,6 +5,7 @@ export const TempUser = z.object({
   id: z.string().trim().optional(),
   email: z.email().trim(),
   role: z.enum(UserRole),
+  photo: z.string().trim().optional().nullable(),
 });
 
 export type TempUser = z.infer<typeof TempUser>;

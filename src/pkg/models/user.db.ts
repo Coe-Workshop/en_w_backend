@@ -34,6 +34,7 @@ export const users = pgTable(
     faculty: text("faculty"),
     role: userRole("role").notNull(),
     phone: varchar("phone", { length: 32 }).notNull(),
+    photo: text("photo"),
     createdAt: timestamp("created_at", { precision: 6, mode: "date" })
       .defaultNow()
       .notNull(),

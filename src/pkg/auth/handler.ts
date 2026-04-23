@@ -38,13 +38,13 @@ const authHandler = (authService: AuthService) => ({
     const result = TempUser.safeParse(req.user);
     if (!result.success) {
       return res.status(HttpStatus.FORBIDDEN).json({
-	success: false,
-	message: "คำขอไม่ถูกต้อง",
-	error: result.error
-      })
-    } 
+        success: false,
+        message: "คำขอไม่ถูกต้อง",
+        error: result.error
+      });
+    }
     const isRegistered = await authService.isRegistered(result.data.email);
-    if (result.data && !isRegistered) {
+    if (!isRegistered) {
       return res.redirect(`${frontendUrl}/on-boarding`);
     }
 
@@ -143,6 +143,7 @@ const authHandler = (authService: AuthService) => ({
       const resultUser = TempUser.parse(req.user);
       const reqUser = {
         email: resultUser.email,
+        photo: resultUser.photo ?? undefined,
         ...reqData,
       };
       const user = authService.register(reqUser);
