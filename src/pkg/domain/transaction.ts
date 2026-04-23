@@ -24,14 +24,14 @@ import {
 export interface TransactionService {
   createTransaction: (req: CreateTransactionRequest) => Promise<Transaction>;
   getAllTransactionsByUser: (
-    req: GetAllTransactionsByUserRequest,
+    filters: GetAllTransactionsByUserRequest,
     page: number,
   ) => Promise<GetAllTransactionsByUser>;
   getApprovedBookingsByItem: (
     req: GetApprovedBookingsByItemRequest,
   ) => Promise<GetAllTransactionsByItem[]>;
   getAllTransactionsByStatus: (
-    req: GetAllTransactionsByStatusRequest | undefined,
+    req: GetAllTransactionsByStatusRequest,
     page: number,
   ) => Promise<{ numberOfPage: number; users: GetAllTransactionsByStatus[] }>;
   updateTransactionById: (req: UpdateTransactionByIdRequest) => Promise<void>;
@@ -47,7 +47,7 @@ export interface TransactionService {
 export interface TransactionRepository {
   getAllTransactionsByUser: (
     db: DBTransaction,
-    id: string,
+    filters: GetAllTransactionsByUserRequest,
     page: number,
   ) => Promise<GetAllTransactionsByUser>;
   getApprovedBookingsByItem: (
@@ -56,7 +56,7 @@ export interface TransactionRepository {
   ) => Promise<GetAllTransactionsByItem[]>;
   getAllTransactionsByStatus: (
     db: DBTransaction,
-    status: transactionStatus | undefined,
+    filters: GetAllTransactionsByStatusRequest,
     page: number,
   ) => Promise<{ numberOfPage: number; users: GetAllTransactionsByStatus[] }>;
   createTransaction: (

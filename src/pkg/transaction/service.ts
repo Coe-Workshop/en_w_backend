@@ -8,11 +8,11 @@ export const makeTransactionService = (
   db: DB,
   transactionRepository: TransactionRepository,
 ): TransactionService => ({
-  getAllTransactionsByUser: async (userID, page) => {
+  getAllTransactionsByUser: async (filters, page) => {
     return await db.transaction(async (tx) => {
       return await transactionRepository.getAllTransactionsByUser(
         tx,
-        userID,
+        filters,
         page,
       );
     });

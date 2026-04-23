@@ -12,10 +12,12 @@ export const GetApprovedBookingsByItemRequest = z.object({
     .pipe(z.iso.date("ไม่มีวันที่ดังกล่าว หรือรูปแบบไม่ถูกต้อง (YYYY-MM-DD)")),
 });
 
-export const GetAllTransactionsByUserRequest = z
-  .string("ต้องการ uuid ของ user")
-  .trim()
-  .uuid("รูปแบบของ uuid ไม่ถูกต้อง");
+export const GetAllTransactionsByUserRequest = z.object({
+  user: z.string().uuid("รูปแบบของ uuid ไม่ถูกต้อง").optional(),
+  userName: z.string().trim().min(1).optional(),
+}).refine((data) => data.user || data.userName, {
+  message: "ต้องระบุ user (uuid) หรือ userName",
+});
 
 export const CreateTransactionRequest = z
   .object(
@@ -89,9 +91,11 @@ export const CreateTransactionRequest = z
     endedAt: new Date(`${data.date}T${data.endedAt}:00Z`),
   }));
 
-export const GetAllTransactionsByStatusRequest = z
-  .enum(["APPROVE", "REJECT", "RESERVE"], "ไม่มีสถานะของการจองดังกล่าว")
-  .optional();
+export const GetAllTransactionsByStatusRequest = z.object({
+  status: z.enum(["APPROVE", "REJECT", "RESERVE"]).optional(),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "รูปแบบวันที่ไม่ถูกต้อง (YYYY-MM-DD)").optional(),
+  userName: z.string().trim().min(1).optional(),
+});
 
 export const pageNumberRequest = z.coerce
   .number("pageNumber ต้องเป็นตัวเลข")

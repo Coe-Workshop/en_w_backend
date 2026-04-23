@@ -70,7 +70,10 @@ const transactionHandler = (transactionService: TransactionService) => ({
   ): Promise<Response> => {
     try {
       const reqData: GetAllTransactionsByUserRequest =
-        GetAllTransactionsByUserRequest.parse(req.query.user);
+        GetAllTransactionsByUserRequest.parse({
+          user: req.query.user as string | undefined,
+          userName: req.query.userName as string | undefined,
+        });
       const page: pageNumberRequest = pageNumberRequest.parse(req.query.page);
       const result = await transactionService.getAllTransactionsByUser(
         reqData,
@@ -159,7 +162,11 @@ const transactionHandler = (transactionService: TransactionService) => ({
   ): Promise<Response> => {
     try {
       const reqData: GetAllTransactionsByStatusRequest =
-        GetAllTransactionsByStatusRequest.parse(req.query.status);
+        GetAllTransactionsByStatusRequest.parse({
+          status: req.query.status as string | undefined,
+          date: req.query.date as string | undefined,
+          userName: req.query.userName as string | undefined,
+        });
       const page: pageNumberRequest = pageNumberRequest.parse(req.query.page);
       const result = await transactionService.getAllTransactionsByStatus(
         reqData,
@@ -288,7 +295,6 @@ const transactionHandler = (transactionService: TransactionService) => ({
         success: true,
       });
     } catch (err) {
-      console.log(err);
       if (err instanceof z.ZodError) {
         return res.status(HttpStatus.BAD_REQUEST).json({
           success: false,
@@ -362,13 +368,11 @@ const transactionHandler = (transactionService: TransactionService) => ({
   },
 
   cancelTransaction: async (req: Request, res: Response): Promise<Response> => {
-    console.log("is it working?");
     try {
       const rawData = {
         id: req.params.id,
         reserverID: res.locals.id,
       };
-      console.log(rawData);
       const reqData: CancelTransactionRequest =
         CancelTransactionRequest.parse(rawData);
       await transactionService.cancelTransaction(reqData);

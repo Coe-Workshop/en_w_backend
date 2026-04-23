@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, lt, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, ilike, inArray, lt, ne, sql } from "drizzle-orm";
 import { DatabaseError } from "pg";
 import { DrizzleQueryError } from "drizzle-orm/errors";
 import HttpStatus from "http-status";
@@ -233,7 +233,30 @@ export const makeTransactionRepository = (): TransactionRepository => ({
     }
   },
 
-  getAllTransactionsByUser: async (db, userID, page) => {
+  getAllTransactionsByUser: async (db, filters, page) => {
+    const { user, userName } = filters;
+
+    let targetUserId: string;
+
+    if (user) {
+      targetUserId = user;
+    } else if (userName) {
+      const matchedUsers = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(
+          sql`(${users.firstName} || ' ' || ${users.lastName}) ILIKE ${'%' + userName + '%'}`
+        )
+        .limit(1);
+
+      if (matchedUsers.length === 0) {
+        throw new AppErr(HttpStatus.NOT_FOUND, "USER_NOT_FOUND");
+      }
+      targetUserId = matchedUsers[0].id;
+    } else {
+      throw new AppErr(HttpStatus.BAD_REQUEST, "ต้องระบุ user หรือ userName");
+    }
+
     const userQuery = await db
       .select({
         phone: users.phone,
@@ -241,7 +264,7 @@ export const makeTransactionRepository = (): TransactionRepository => ({
         faculty: users.faculty,
       })
       .from(users)
-      .where(eq(users.id, userID))
+      .where(eq(users.id, targetUserId))
       .limit(1);
 
     if (userQuery.length === 0) {
@@ -266,7 +289,7 @@ export const makeTransactionRepository = (): TransactionRepository => ({
       .leftJoin(assets, eq(assets.id, transactions.assetID))
       .leftJoin(items, eq(items.id, transactions.itemID))
       .leftJoin(messages, eq(transactions.id, messages.transactionID))
-      .where(eq(transactions.reserverID, userID))
+      .where(eq(transactions.reserverID, targetUserId))
       .groupBy(sql<Date>`${transactions.startedAt}::date`)
       .orderBy(desc(sql`${transactions.startedAt}::date`))
       .limit(10)
@@ -278,13 +301,37 @@ export const makeTransactionRepository = (): TransactionRepository => ({
     };
   },
 
-  getAllTransactionsByStatus: async (db, status, page) => {
-    const isFiltered = status ? eq(transactions.status, status) : undefined;
+  getAllTransactionsByStatus: async (db, filters, page) => {
+    const { status, date, userName } = filters;
+
+    const conditions = [];
+    if (status) conditions.push(eq(transactions.status, status));
+    if (date) conditions.push(sql`DATE(${transactions.startedAt}) = ${date}`);
+
+    let matchingUserIds: string[] | undefined;
+    if (userName) {
+      const matchedUsers = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(
+          sql`(${users.firstName} || ' ' || ${users.lastName}) ILIKE ${'%' + userName + '%'}`
+        );
+      matchingUserIds = matchedUsers.map((u) => u.id);
+      if (matchingUserIds.length === 0) {
+        return { numberOfPage: 0, users: [] };
+      }
+    }
+
+    if (matchingUserIds) {
+      conditions.push(inArray(transactions.reserverID, matchingUserIds));
+    }
+
+    const whereCondition = conditions.length > 0 ? and(...conditions) : undefined;
 
     const totalUsers = await db
       .select({ count: sql<number>`count(distinct ${transactions.reserverID})` })
       .from(transactions)
-      .where(isFiltered);
+      .where(whereCondition);
 
     const numberOfPage = Math.ceil(totalUsers[0].count / 15);
 
@@ -293,7 +340,7 @@ export const makeTransactionRepository = (): TransactionRepository => ({
         reserverID: transactions.reserverID,
       })
       .from(transactions)
-      .where(isFiltered)
+      .where(whereCondition)
       .orderBy(transactions.reserverID)
       .limit(15)
       .offset((page - 1) * 15);
@@ -316,6 +363,10 @@ export const makeTransactionRepository = (): TransactionRepository => ({
         ? [asc(transactions.startedAt), asc(transactions.createdAt)]
         : [desc(transactions.createdAt)];
 
+      const userTransactionConditions = [eq(transactions.reserverID, reserverID)];
+      if (status) userTransactionConditions.push(eq(transactions.status, status));
+      if (date) userTransactionConditions.push(sql`DATE(${transactions.startedAt}) = ${date}`);
+
       const userTransactions = await db
         .select({
           id: transactions.id,
@@ -324,17 +375,12 @@ export const makeTransactionRepository = (): TransactionRepository => ({
           startedAt: transactions.startedAt,
           endedAt: transactions.endedAt,
           status: transactions.status,
-          message: sql<string>`COALESCE((SELECT detail FROM messages WHERE txn_id = ${transactions.id} LIMIT 1), 'no message attach')`,
+          message: sql<string>`COALESCE((SELECT detail FROM messages WHERE txn_id = ${transactions.id} LIMIT 1), 'ไม่มีข้อความ')`,
         })
         .from(transactions)
         .leftJoin(assets, eq(assets.id, transactions.assetID))
         .leftJoin(items, eq(items.id, transactions.itemID))
-        .where(
-          and(
-            eq(transactions.reserverID, reserverID),
-            isFiltered
-          )
-        )
+        .where(and(...userTransactionConditions))
         .orderBy(...orderBy);
 
       result.push({
@@ -369,7 +415,6 @@ export const makeTransactionRepository = (): TransactionRepository => ({
         .returning();
       return result[0];
     } catch (err) {
-      console.log(err);
       if (
         err instanceof DrizzleQueryError &&
         err.cause instanceof DatabaseError
@@ -459,7 +504,6 @@ export const makeTransactionRepository = (): TransactionRepository => ({
     try {
       const now = new Date();
 
-      // Find and update all RESERVE transactions where startedAt has passed
       const expiredTransactions = await db
         .update(transactions)
         .set({

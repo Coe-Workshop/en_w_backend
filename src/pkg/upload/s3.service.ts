@@ -28,13 +28,7 @@ export const s3Service = {
     originalname: string
   ): Promise<string> => {
     try {
-      console.log("DEBUG S3 Upload - Starting upload...");
-      console.log("DEBUG S3 Upload - File:", { mimetype, originalname, size: fileBuffer.length });
-      console.log("DEBUG S3 Upload - Bucket:", s3Config.bucketName);
-      console.log("DEBUG S3 Upload - Region:", s3Config.region);
-      
       const key = generateUniqueKey(originalname);
-      console.log("DEBUG S3 Upload - Generated key:", key);
 
       const command = new PutObjectCommand({
         Bucket: s3Config.bucketName,
@@ -43,21 +37,9 @@ export const s3Service = {
         ContentType: mimetype,
       });
 
-      console.log("DEBUG S3 Upload - Sending command...");
       await s3Client.send(command);
-      console.log("DEBUG S3 Upload - Success! Key:", key);
       return key;
     } catch (error) {
-      console.error("DEBUG S3 Upload - ERROR:");
-      console.error("Error name:", (error as Error).name);
-      console.error("Error message:", (error as Error).message);
-      console.error("Error stack:", (error as Error).stack);
-      if ((error as any).Code) {
-        console.error("AWS Error Code:", (error as any).Code);
-      }
-      if ((error as any).$metadata) {
-        console.error("AWS Metadata:", (error as any).$metadata);
-      }
       throw new Error(`Failed to upload file: ${(error as Error).message}`);
     }
   },

@@ -122,10 +122,6 @@ export const itemHandler = (itemService: ItemService) => ({
 
   createItem: async (req: Request, res: Response): Promise<Response> => {
     try {
-      console.log("DEBUG - req.body:", req.body);
-      console.log("DEBUG - req.file:", req.file);
-      console.log("DEBUG - content-type:", req.headers["content-type"]);
-      console.log("DEBUG - isAuthenticated:", (req as any).isAuthenticated?.());
       const reqData: CreateItemRequest = CreateItemRequest.parse(req.body);
 
       const categoryName = reqData.categoryName as ItemCategory;
@@ -153,7 +149,6 @@ export const itemHandler = (itemService: ItemService) => ({
           });
         }
 
-        console.log("DEBUG - Starting S3 upload...");
         try {
           const key = await s3Service.uploadFile(
             req.file.buffer,
@@ -161,9 +156,7 @@ export const itemHandler = (itemService: ItemService) => ({
             req.file.originalname
           );
           imageUrl = s3Service.getPublicUrl(key);
-          console.log("DEBUG - S3 upload success, URL:", imageUrl);
         } catch (uploadError) {
-          console.error("DEBUG - S3 upload failed:", uploadError);
           throw uploadError;
         }
       }
