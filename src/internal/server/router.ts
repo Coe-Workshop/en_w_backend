@@ -17,6 +17,9 @@ import makeTransactionService from "@/pkg/transaction/service";
 import { makeTransactionHandler } from "@/pkg/transaction/handler";
 import { makeUploadHandler } from "@/pkg/upload";
 import { uploadMiddleware } from "@/pkg/upload/upload.middleware";
+import makeReportRepository from "@/pkg/report/repository";
+import makeReportService from "@/pkg/report/service";
+import makeReportHandler from "@/pkg/report/handler";
 
 const setupRoutes = (app: Express, db: DB) => {
   const userRepository = makeUserRepository();
@@ -28,10 +31,13 @@ const setupRoutes = (app: Express, db: DB) => {
   const itemService = makeItemService(db, itemRepository);
   const assetService = makeAssetService(db, assetRepository);
   const transactionService = makeTransactionService(db, transactionRepository);
+  const reportRepository = makeReportRepository();
+  const reportService = makeReportService(db, reportRepository);
   const authHandler = makeAuthHandler(authService);
   const itemHandler = makeItemHandler(itemService, middleware);
   const assetHandler = makeAssetHandler(assetService, middleware);
   const transactionHandler = makeTransactionHandler(transactionService, middleware);
+  const reportHandler = makeReportHandler(reportService, middleware);
   const uploadHandler = makeUploadHandler();
 
   app.use("/api/v1/auth", authHandler);
@@ -39,6 +45,7 @@ const setupRoutes = (app: Express, db: DB) => {
   app.use("/api/v1/assets", assetHandler);
   app.use("/api/v1/transactions", transactionHandler);
   app.use("/api/v1/upload", middleware.reqAuthHandler(), uploadMiddleware.single("image"), uploadHandler);
+  app.use("/api/v1/reports", reportHandler);
 
   const userService = makeUserService(db, userRepository);
   const userHandler = makeUserHandler(userService);
