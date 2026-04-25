@@ -21,7 +21,10 @@ pool
     process.exit(1);
   });
 
-const db = drizzle(pool, { schema, casing: "snake_case" });
+const db = drizzle(pool, { 
+  schema, 
+  casing: "snake_case",
+});
 
 const migrate = async () => {
   try {

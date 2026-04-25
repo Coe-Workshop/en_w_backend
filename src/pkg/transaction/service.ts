@@ -24,6 +24,12 @@ export const makeTransactionService = (
     });
   },
 
+  getReservedByItem: async (req) => {
+    return await db.transaction(async (tx) => {
+      return await transactionRepository.getReservedByItem(tx, req);
+    });
+  },
+
   getAllTransactionsByStatus: async (req, page) => {
     return await db.transaction(async (tx) => {
       const result = await transactionRepository.getAllTransactionsByStatus(

@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, gt, ilike, inArray, lt, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, ilike, inArray, lt, ne, sql } from "drizzle-orm";
 import { DatabaseError } from "pg";
 import { DrizzleQueryError } from "drizzle-orm/errors";
 import HttpStatus from "http-status";
@@ -80,11 +80,11 @@ export const makeTransactionRepository = (): TransactionRepository => ({
       throw new AppErr(HttpStatus.NOT_FOUND, "ITEM_NOT_FOUND");
     }
 
-    // +7 hrs
+    // Thailand local time: 08:00-17:00 = 01:00-10:00 UTC (Bangkok is UTC+7)
     const startOfDay = new Date(reqData.date);
-    startOfDay.setHours(8, 0, 0, 0);
+    startOfDay.setUTCHours(1, 0, 0, 0);
     const endOfDay = new Date(reqData.date);
-    endOfDay.setHours(17, 0, 0, 0);
+    endOfDay.setUTCHours(10, 0, 0, 0);
 
     const result = await db
       .select({
@@ -103,7 +103,6 @@ export const makeTransactionRepository = (): TransactionRepository => ({
             'user', json_build_object(
               'phone',  transactions.phone,
               'userName', transactions.firstName || ' ' || transactions.lastName,
-	      // replace this with reserver's google profile picture.
               'profileUrl', 'https://gear.kku.ac.th/wp-content/uploads/2025/05/wasu.jpg'
             )
           )
@@ -142,6 +141,83 @@ export const makeTransactionRepository = (): TransactionRepository => ({
       .leftJoin(categories, eq(items.categoryID, categories.id))
       .where(eq(items.id, reqData.itemId))
       .groupBy(items.name, items.description, categories.name, items.imageUrl);
+    return result;
+  },
+
+  getReservedByItem: async (db, reqData) => {
+    const isExist = await db.query.items.findFirst({
+      where: eq(items.id, reqData.itemId),
+    });
+    if (!isExist) {
+      throw new AppErr(HttpStatus.NOT_FOUND, "ITEM_NOT_FOUND");
+    }
+
+    // Thailand local time: 08:00-17:00 = 01:00-10:00 UTC (Bangkok is UTC+7)
+    const startOfDay = new Date(reqData.date);
+    const endOfDay = new Date(reqData.date)
+    startOfDay.setUTCHours(1, 0, 0, 0);
+    endOfDay.setUTCHours(10, 0, 0, 0);
+
+    const result = await db.query.items.findMany({
+      where: eq(items.id, reqData.itemId),
+      with: {
+        category: {
+          columns: {
+	    id: true,
+            name: true,
+          },
+        },
+        assetsToItems: {
+          with: {
+            asset: {
+              columns: {
+                assetID: true,
+              },
+              with: {
+                transactions: {
+                  where: and(gte(transactions.startedAt, startOfDay),
+                    lt(transactions.startedAt, endOfDay),
+                    ne(transactions.status, "REJECT")),
+                  orderBy: [desc(transactions.startedAt)],
+                  limit: 10,
+                  columns: {
+                    id: true,
+                    startedAt: true,
+                    endedAt: true,
+                    status: true,
+                  },
+                  with: {
+                    reserver: {
+                      columns: {
+                        phone: true,
+                        firstName: true,
+                        lastName: true,
+                      },
+                      extras: {
+                        userName: sql<string>`${users.firstName} || ' ' || ${users.lastName}`.as('userName'),
+                        profileUrl: sql<string>`'https://gear.kku.ac.th/wp-content/uploads/2025/05/wasu.jpg'`.as('profileUrl'),
+                      },
+                    },
+                    messages: {
+                      columns: {
+                        detail: true,
+                      },
+                      limit: 1, // Matches the original's single message per transaction
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+      columns: {
+        name: true,
+        description: true,
+        imageUrl: true,
+      },
+    });
+
     return result;
   },
 
@@ -349,6 +425,7 @@ export const makeTransactionRepository = (): TransactionRepository => ({
     for (const { reserverID } of userIds) {
       const userInfo = await db
         .select({
+	  id: users.id,
           phone: users.phone,
           userName: sql<string>`${users.firstName} || ' ' || ${users.lastName}`,
           profileUrl: sql<string>`'https://gear.kku.ac.th/wp-content/uploads/2025/05/wasu.jpg'`,
@@ -401,7 +478,7 @@ export const makeTransactionRepository = (): TransactionRepository => ({
         where: and(
           eq(transactions.assetID, transaction.assetID),
           eq(transactions.itemID, transaction.itemID),
-          eq(transactions.status, "APPROVE"),
+          ne(transactions.status, "REJECT"),
           lt(transactions.startedAt, transaction.endedAt),
           gt(transactions.endedAt, transaction.startedAt),
         ),

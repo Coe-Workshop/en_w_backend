@@ -1,7 +1,7 @@
 import { integer, pgTable, serial, text } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { pgEnum } from "drizzle-orm/pg-core";
-import { assets } from "./asset.db";
+import { assets, assetsToItems } from "./asset.db";
 import { customType } from "drizzle-orm/pg-core";
 
 export interface Item {
@@ -35,7 +35,7 @@ export const items = pgTable("items", {
 //one item has one category
 //one ITEM has many assets
 export const itemsRelations = relations(items, ({ one, many }) => ({
-  assetIDs: many(assets),
+  assetsToItems: many(assetsToItems),
   category: one(categories, {
     fields: [items.categoryID],
     references: [categories.id],

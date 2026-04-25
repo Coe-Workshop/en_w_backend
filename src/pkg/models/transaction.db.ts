@@ -52,6 +52,7 @@ export interface GetAllTransactionsByStatus {
 export type AssetsStatus = {
   assetID: string;
   transactions: {
+    id: number;
     status: transactionStatus;
     startedAt: Date;
     endedAt: Date;
@@ -65,6 +66,14 @@ export type AssetsStatus = {
 };
 
 export interface GetAllTransactionsByItem {
+  itemName: string | null;
+  description: string | null;
+  categoryName: ItemCategory | null;
+  imageUrl: string | null;
+  assets: AssetsStatus[];
+}
+
+export interface GetReservedByItem {
   itemName: string | null;
   description: string | null;
   categoryName: ItemCategory | null;

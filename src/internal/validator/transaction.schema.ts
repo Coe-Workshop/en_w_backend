@@ -12,6 +12,18 @@ export const GetApprovedBookingsByItemRequest = z.object({
     .pipe(z.iso.date("ไม่มีวันที่ดังกล่าว หรือรูปแบบไม่ถูกต้อง (YYYY-MM-DD)")),
 });
 
+export const GetReservedByItemRequest = z.object({
+  itemId: z.coerce
+    .number("ไอดีของอุปกณ์ต้องเป็นตัวเลข")
+    .min(1, "ไอดีของอุปกณ์ต้องมากกว่า 0")
+    .max(2147483647, "ไม่พบอุปกณ์ดังกล่าว")
+    .int("ไอดีของอุปกณ์ต้องเป็นจำนวนเต็ม"),
+  date: z
+    .string("กรุณาเลือกวันที่จอง")
+    .trim()
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "รูปแบบวันที่ไม่ถูกต้อง (YYYY-MM-DD)"),
+});
+
 export const GetAllTransactionsByUserRequest = z.object({
   user: z.string().uuid("รูปแบบของ uuid ไม่ถูกต้อง").optional(),
   userName: z.string().trim().min(1).optional(),
@@ -72,16 +84,15 @@ export const CreateTransactionRequest = z
     error: "เวลาสิ้นสุดการจองต้องมากกว่าเวลาเริ่มต้นการจอง",
   })
   .refine(
-    (data) =>
-      new Date(data.date).setHours(0, 0, 0, 0) >=
-      new Date().setHours(0, 0, 0, 0),
+    (data) => {
+      const inputDate = new Date(data.date);
+      const nowUTC = new Date();
+      return inputDate >= nowUTC;
+    },
     {
-      error: "ไม่สามารถจองวันที่ในอดีตได้",
+      error: "ไม่สามารถจองวันเวลาในอดีตได้",
     },
   )
-  .refine((data) => data.startedAt >= "09:00" && data.endedAt <= "16:00", {
-    error: "ไม่สามารถจองนอกเวลาทำการได้  (09:00 น. ถึง 16:00 น.)",
-  })
   .transform((data) => ({
     assetID: data.assetID,
     itemID: data.itemID,
@@ -89,7 +100,18 @@ export const CreateTransactionRequest = z
     message: data.message,
     startedAt: new Date(`${data.date}T${data.startedAt}:00Z`),
     endedAt: new Date(`${data.date}T${data.endedAt}:00Z`),
-  }));
+  }))
+  .refine((data) => {
+    const thaiOffset = 7 * 60 * 60 * 1000;
+    const startedAtThai = new Date(data.startedAt.getTime() + thaiOffset);
+    const endedAtThai = new Date(data.endedAt.getTime() + thaiOffset);
+    const startHour = startedAtThai.getUTCHours();
+    const endHour = endedAtThai.getUTCHours();
+    const endMinute = endedAtThai.getUTCMinutes();
+    return startHour >= 9 && (endHour < 16 || (endHour === 16 && endMinute === 0));
+  }, {
+    error: "ไม่สามารถจองนอกเวลาทำการได้  (09:00 น. ถึง 16:00 น.)",
+  });
 
 export const GetAllTransactionsByStatusRequest = z.object({
   status: z.enum(["APPROVE", "REJECT", "RESERVE"]).optional(),
@@ -180,6 +202,7 @@ export type pageNumberRequest = z.infer<typeof pageNumberRequest>;
 export type GetApprovedBookingsByItemRequest = z.infer<
   typeof GetApprovedBookingsByItemRequest
 >;
+export type GetReservedByItemRequest = z.infer<typeof GetReservedByItemRequest>;
 export type GetAllTransactionsByUserRequest = z.infer<
   typeof GetAllTransactionsByUserRequest
 >;

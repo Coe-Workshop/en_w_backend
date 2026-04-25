@@ -7,7 +7,6 @@ import {
   NewTransaction,
   Transaction,
   transactionIdList,
-  transactionStatus,
   UpdateTransactionsConflicts,
 } from "../models";
 import {
@@ -19,6 +18,7 @@ import {
   CancelTransactionRequest,
   GetApprovedBookingsByItemRequest,
   CheckTransactionConflictRequest,
+  GetReservedByItemRequest,
 } from "@/internal/validator/transaction.schema";
 
 export interface TransactionService {
@@ -29,6 +29,9 @@ export interface TransactionService {
   ) => Promise<GetAllTransactionsByUser>;
   getApprovedBookingsByItem: (
     req: GetApprovedBookingsByItemRequest,
+  ) => Promise<GetAllTransactionsByItem[]>;
+  getReservedByItem: (
+    req: GetReservedByItemRequest,
   ) => Promise<GetAllTransactionsByItem[]>;
   getAllTransactionsByStatus: (
     req: GetAllTransactionsByStatusRequest,
@@ -54,6 +57,10 @@ export interface TransactionRepository {
     db: DBTransaction,
     req: GetApprovedBookingsByItemRequest,
   ) => Promise<GetAllTransactionsByItem[]>;
+  getReservedByItem: (
+    db: DBTransaction,
+    req: GetReservedByItemRequest,
+  ) => Promise<any[]>;
   getAllTransactionsByStatus: (
     db: DBTransaction,
     filters: GetAllTransactionsByStatusRequest,

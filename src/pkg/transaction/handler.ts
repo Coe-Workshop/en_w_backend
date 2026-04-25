@@ -9,6 +9,7 @@ import {
   GetAllTransactionsByStatusRequest,
   GetAllTransactionsByUserRequest,
   GetApprovedBookingsByItemRequest,
+  GetReservedByItemRequest,
   pageNumberRequest,
   UpdateAllTransactionByUserRequest,
   UpdateTransactionByIdRequest,
@@ -44,6 +45,11 @@ export const makeTransactionHandler = (
     "/by-item",
     middleware.requireRoles(UserRole.ADMIN),
     handler.getApprovedBookingsByItem,
+  );
+  router.get(
+    "/reserved-by-item",
+    middleware.reqAuthHandler(),
+    handler.getReservedByItem,
   );
   // TODO get me
   router.get(
@@ -128,6 +134,50 @@ const transactionHandler = (transactionService: TransactionService) => ({
       return res.status(HttpStatus.OK).json({
         success: true,
         data: result[0],
+      });
+    } catch (err) {
+      const error = err as Error;
+      if (err instanceof z.ZodError) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false,
+          error: err.issues[0].message,
+        });
+      }
+      if (err instanceof AppErr) {
+        if (
+          err.code === HttpStatus.NOT_FOUND &&
+          err.message === "ITEM_NOT_FOUND"
+        ) {
+          return res.status(HttpStatus.NOT_FOUND).json({
+            success: false,
+            error: "ไม่พบอุปกรณ์ที่ระบุ",
+          });
+        }
+      }
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message:
+          "ไม่สามารถเข้าถึงข้อมูลการจองได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
+        error: error.message,
+      });
+    }
+  },
+
+  getReservedByItem: async (
+    req: Request,
+    res: Response,
+  ): Promise<Response> => {
+    try {
+      const rawData = {
+        itemId: req.query.item,
+        date: req.query.date,
+      };
+      const reqData: GetReservedByItemRequest =
+        GetReservedByItemRequest.parse(rawData);
+      const result = await transactionService.getReservedByItem(reqData);
+      return res.status(HttpStatus.OK).json({
+        success: true,
+        data: result,
       });
     } catch (err) {
       const error = err as Error;
@@ -332,7 +382,6 @@ const transactionHandler = (transactionService: TransactionService) => ({
         ...req.body,
         reserverID: req.params.id,
         approverID: res.locals.id,
-        // approverID: "427bf6e9-00c5-40d6-8af4-d0b603c468be",
       };
       const reqData: UpdateAllTransactionByUserRequest =
         UpdateAllTransactionByUserRequest.parse(rawData);
