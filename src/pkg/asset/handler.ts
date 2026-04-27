@@ -22,7 +22,7 @@ export const makeAssetHandler = (assetService: AssetService, middleware: Middlew
   );
   router.delete(
     "/:id", 
-    // middleware.requireRoles(UserRole.ADMIN),
+    middleware.requireRoles(UserRole.ADMIN),
     handler.deleteAsset,
   );
   return router;
