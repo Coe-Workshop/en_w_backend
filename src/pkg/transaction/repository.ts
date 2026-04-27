@@ -136,9 +136,12 @@ export const makeTransactionRepository = (): TransactionRepository => ({
       })
       .from(items)
       .leftJoin(assetsToItems, eq(assetsToItems.itemID, items.id))
-      .leftJoin(assets, eq(assets.id, assetsToItems.assetID))
+      .leftJoin(
+        assets,
+        and(eq(assets.id, assetsToItems.assetID), isNull(assets.deletedAt)),
+      )
       .leftJoin(categories, eq(items.categoryID, categories.id))
-      .where(and(eq(items.id, reqData.itemId), isNull(assets.deletedAt)))
+      .where(eq(items.id, reqData.itemId))
       .groupBy(items.name, items.description, categories.name, items.imageUrl);
     return result;
   },

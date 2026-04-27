@@ -62,7 +62,10 @@ export const makeItemRepository = (): ItemRepository => ({
       .from(items)
       .leftJoin(categories, eq(items.categoryID, categories.id))
       .leftJoin(assetsToItems, eq(assetsToItems.itemID, items.id))
-      .leftJoin(assets, eq(assets.id, assetsToItems.assetID))
+      .leftJoin(
+        assets,
+        and(eq(assets.id, assetsToItems.assetID), isNull(assets.deletedAt)),
+      )
       .leftJoin(
         transactions,
         and(
@@ -74,7 +77,7 @@ export const makeItemRepository = (): ItemRepository => ({
           gte(transactions.endedAt, right_now),
         ),
       )
-      .where(and(...conditions, isNull(assets.deletedAt)))
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
       .groupBy(items.id, categories.id)
       .orderBy(items.id);
     return result;
@@ -92,10 +95,13 @@ export const makeItemRepository = (): ItemRepository => ({
         imageUrl: items.imageUrl,
       })
       .from(items)
-      .where(and(eq(sql.identifier(`items"."${column}`), value), isNull(assets.deletedAt)))
       .leftJoin(categories, eq(items.categoryID, categories.id))
       .leftJoin(assetsToItems, eq(assetsToItems.itemID, items.id))
-      .leftJoin(assets, eq(assets.id, assetsToItems.assetID))
+      .leftJoin(
+        assets,
+        and(eq(assets.id, assetsToItems.assetID), isNull(assets.deletedAt)),
+      )
+      .where(eq(sql.identifier(`items"."${column}`), value))
       .groupBy(items.id, categories.name);
 
     if (result.length === 0) {
