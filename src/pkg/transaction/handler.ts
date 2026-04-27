@@ -51,12 +51,16 @@ export const makeTransactionHandler = (
     middleware.reqAuthHandler(),
     handler.getReservedByItem,
   );
-  // TODO get me
   router.get(
     "/by-user",
-    middleware.reqAuthHandler(),
+    middleware.requireRoles(UserRole.ADMIN),
     handler.getAllTransactionsByUser,
   );
+  router.get(
+    "/history/me",
+    middleware.reqAuthHandler(),
+    handler.getTransactionsMe,
+  )
   router.get(
     "/by-status",
     middleware.requireRoles(UserRole.ADMIN),
@@ -80,6 +84,52 @@ const transactionHandler = (transactionService: TransactionService) => ({
         GetAllTransactionsByUserRequest.parse({
           user: req.query.user as string | undefined,
           userName: req.query.userName as string | undefined,
+        });
+      const page: pageNumberRequest = pageNumberRequest.parse(req.query.page);
+      const result = await transactionService.getAllTransactionsByUser(
+        reqData,
+        page,
+      );
+      return res.status(HttpStatus.OK).json({
+        success: true,
+        data: result,
+      });
+    } catch (err) {
+      if (err instanceof z.ZodError) {
+        return res.status(HttpStatus.BAD_REQUEST).json({
+          success: false,
+          error: err.issues[0].message,
+        });
+      }
+      if (err instanceof AppErr) {
+        if (
+          err.code === HttpStatus.NOT_FOUND &&
+          err.message === "USER_NOT_FOUND"
+        ) {
+          return res.status(err.code).json({
+            success: false,
+            error: "ไม่พบผู้ใช้ที่ระบุ",
+          });
+        }
+      }
+      const er = err as Error;
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        success: false,
+        message:
+          "ไม่สามารถเข้าถึงข้อมูลการจองได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
+        error: er.message,
+      });
+    }
+  },
+
+  getTransactionsMe: async (
+    req: Request,
+    res: Response,
+  ): Promise<Response> => {
+    try {
+      const reqData: GetAllTransactionsByUserRequest =
+        GetAllTransactionsByUserRequest.parse({
+          user: res.locals.id,
         });
       const page: pageNumberRequest = pageNumberRequest.parse(req.query.page);
       const result = await transactionService.getAllTransactionsByUser(

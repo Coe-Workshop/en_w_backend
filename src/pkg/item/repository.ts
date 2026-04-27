@@ -1,4 +1,4 @@
-import { and, eq, gte, lt, sql, ilike } from "drizzle-orm";
+import { and, eq, gte, lt, sql, ilike, ne } from "drizzle-orm";
 import { DatabaseError } from "pg";
 import { DrizzleQueryError } from "drizzle-orm/errors";
 import HttpStatus from "http-status";
@@ -68,7 +68,7 @@ export const makeItemRepository = (): ItemRepository => ({
         and(
           and(
             eq(transactions.assetID, assets.id),
-            eq(transactions.status, "APPROVE"),
+            ne(transactions.status, "REJECT"),
           ),
           lt(transactions.startedAt, right_now),
           gte(transactions.endedAt, right_now),

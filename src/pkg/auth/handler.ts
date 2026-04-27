@@ -69,6 +69,8 @@ const authHandler = (authService: AuthService) => ({
           });
         }
 
+        res.clearCookie('connect.sid', { path: '/' });
+        res.clearCookie("user_role", { path: "/" });
         res.json({
           success: true,
           message: "Logged out successfully",
@@ -78,55 +80,63 @@ const authHandler = (authService: AuthService) => ({
   },
 
   login: (req: Request, res: Response) => {
-      passport.authenticate('local', (err: any, user: TempUser) => {
-	if (err) {
-	  if (err instanceof AppErr) {
-	    if (err.code === HttpStatus.NOT_FOUND &&
-		err.message === "RECORD_NOT_FOUND") {
-	       return res.status(err.code).json({
-		 success: false,
-		 message: "อีเมล หรือ รหัสผ่าน ไม่ถูกต้อง",
-	       });
-	    }
-	    if (err.code === HttpStatus.UNAUTHORIZED &&
-		err.message == "USER_DOES_NOT_HAVE_CREDENTIALS") {
-	      return res.status(err.code).json({
-		success: false,
-		message: "อีเมล หรือ รหัสผ่าน ไม่ถูกต้อง"
-	      })
-	    }
-	    if (err.code === HttpStatus.UNAUTHORIZED &&
-		err.message == "INVALID_CREDENTIALS") {
-	      return res.status(err.code).json({
-		success: false,
-		message: "อีเมล หรือ รหัสผ่าน ไม่ถูกต้อง"
-	      })
-	    }
-	  }
+    passport.authenticate('local', (err: any, user: TempUser) => {
+      if (err) {
+        if (err instanceof AppErr) {
+          if (err.code === HttpStatus.NOT_FOUND &&
+            err.message === "RECORD_NOT_FOUND") {
+            return res.status(err.code).json({
+              success: false,
+              message: "อีเมล หรือ รหัสผ่าน ไม่ถูกต้อง",
+            });
+          }
+          if (err.code === HttpStatus.UNAUTHORIZED &&
+            err.message == "USER_DOES_NOT_HAVE_CREDENTIALS") {
+            return res.status(err.code).json({
+              success: false,
+              message: "อีเมล หรือ รหัสผ่าน ไม่ถูกต้อง"
+            })
+          }
+          if (err.code === HttpStatus.UNAUTHORIZED &&
+            err.message == "INVALID_CREDENTIALS") {
+            return res.status(err.code).json({
+              success: false,
+              message: "อีเมล หรือ รหัสผ่าน ไม่ถูกต้อง"
+            })
+          }
+        }
 
-	  const er = err as Error;
-	  return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-	    success: false,
-	    message:
-	      "ไม่สามารถเข้าสู่ระบบได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
-	    error: er.message,
-	  });
-	}
+        const er = err as Error;
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+          success: false,
+          message:
+            "ไม่สามารถเข้าสู่ระบบได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
+          error: er.message,
+        });
+      }
 
-	req.logIn(user, (err) => {
-	  if (err) {
-	    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
-	      success: false,
-	      message:
-		"เข้าสู่ระบบไม่สำเร็จ ",
-	      error: err.message,
-	    });
-	  }
-	  return res.status(HttpStatus.OK).json({
-	    success: true,
-	    messages: "เข้าสู่ระบบสำเร็จ"
-	  });
-	});
+      req.logIn(user, (err) => {
+        if (err) {
+          return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            message:
+              "เข้าสู่ระบบไม่สำเร็จ ",
+            error: err.message,
+          });
+        }
+
+        res.cookie("user_role", user.role, {
+          path: "/",
+          maxAge: 24 * 60 * 60 * 1000,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+        });
+
+        return res.status(HttpStatus.OK).json({
+          success: true,
+          messages: "เข้าสู่ระบบสำเร็จ"
+        });
+      });
     })(req, res);
   },
 
@@ -146,11 +156,29 @@ const authHandler = (authService: AuthService) => ({
         photo: resultUser.photo ?? undefined,
         ...reqData,
       };
-      const user = authService.register(reqUser);
+      const user = await authService.register(reqUser);
 
-      res.status(HttpStatus.CREATED).json({
-        success: true,
-        user,
+      req.logIn(user, (err) => {
+        if (err) {
+          return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+            success: false,
+            message:
+              "ไม่สามารถสร้างผู้ใช้ได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
+            error: err.message,
+          });
+        }
+
+        res.cookie("user_role", user.role, {
+          path: "/",
+          maxAge: 24 * 60 * 60 * 1000,
+          secure: process.env.NODE_ENV === "production",
+          sameSite: "lax",
+        });
+
+        return res.status(HttpStatus.CREATED).json({
+          success: true,
+	  user,
+        });
       });
     } catch (err) {
       if (err instanceof z.ZodError) {

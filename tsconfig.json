@@ -10,7 +10,8 @@
     "baseUrl": "./src",
     "paths": {
       "@/*": ["*"]
-    }
+    },
+    "typeRoots": ["./src/types"]
   },
   "include": ["src"]
 }
