@@ -8,14 +8,23 @@ import HttpStatus from "http-status";
 import z from "zod";
 import { AppErr } from "@/utils/appErr";
 import { MiddlewareResources } from "@/internal/middleware/auth";
+import { UserRole } from "../models";
 
 export const makeAssetHandler = (assetService: AssetService, middleware: MiddlewareResources) => {
   const router = Router();
   const handler = assetHandler(assetService);
 
   router.get("/", handler.getAllAssets);
-  router.post("/", handler.createAsset);
-  router.delete("/", handler.deleteAsset);
+  router.post(
+    "/", 
+    middleware.requireRoles(UserRole.ADMIN),
+    handler.createAsset,
+  );
+  router.delete(
+    "/:id", 
+    // middleware.requireRoles(UserRole.ADMIN),
+    handler.deleteAsset,
+  );
   return router;
 };
 
@@ -93,9 +102,9 @@ const assetHandler = (assetService: AssetService) => ({
 
   deleteAsset: async (req: Request, res: Response): Promise<Response> => {
     try {
-      const reqData: DeleteAssetRequest = DeleteAssetRequest.parse(req.body);
+      const reqData: DeleteAssetRequest = DeleteAssetRequest.parse({ id: req.params.id });
       await assetService.deleteAsset(reqData);
-      return res.status(HttpStatus.CREATED).json({
+      return res.status(HttpStatus.OK).json({
         success: true,
       });
     } catch (err) {
@@ -109,20 +118,21 @@ const assetHandler = (assetService: AssetService) => ({
       if (err instanceof AppErr) {
         if (
           err.code === HttpStatus.NOT_FOUND &&
-          err.message === "ITEM_NOT_FOUND"
-        ) {
-          return res.status(HttpStatus.NOT_FOUND).json({
-            success: false,
-            error: "ไม่พบอุปกรณ์ที่ระบุ",
-          });
-        }
-        if (
-          err.code === HttpStatus.NOT_FOUND &&
           err.message === "ASSET_NOT_FOUND"
         ) {
           return res.status(HttpStatus.NOT_FOUND).json({
             success: false,
             error: "ไม่พบเลขครุภัณฑ์ที่ระบุ",
+          });
+        }
+        if (
+          err.code === HttpStatus.CONFLICT &&
+          err.message === "ASSET_HAS_PENDING_TRANSACTIONS"
+        ) {
+          return res.status(HttpStatus.CONFLICT).json({
+            success: false,
+	    error: "ไม่สามารถลบครุภัณฑ์ได้เนื่องจากมีคำขอที่ยังดำเนินการอยู่ จัดการคำขอใช้งานครุภัณฑ์ที่เกี่ยวข้องก่อนแล้วลองใหม่อีกครั้ง",
+
           });
         }
       }

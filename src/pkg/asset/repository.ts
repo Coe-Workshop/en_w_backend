@@ -1,8 +1,8 @@
-import { eq, and, ilike, inArray } from "drizzle-orm";
+import { eq, and, ilike, inArray, sql, isNull } from "drizzle-orm";
 import { DatabaseError } from "pg";
 import { DrizzleQueryError } from "drizzle-orm/errors";
 import HttpStatus from "http-status";
-import { assets, assetsToItems, items } from "../models";
+import { assets, assetsToItems, items, transactions } from "../models";
 import { AppErr } from "@/utils/appErr";
 import { AssetRepository } from "../domain/asset";
 
@@ -20,6 +20,7 @@ export const makeAssetRepository = (): AssetRepository => ({
       .from(assets)
       .leftJoin(assetsToItems, eq(assetsToItems.assetID, assets.id))
       .leftJoin(items, eq(items.id, assetsToItems.itemID))
+      .where(isNull(assets.deletedAt))
       .orderBy(assets.id);
 
     return result;
@@ -94,55 +95,36 @@ export const makeAssetRepository = (): AssetRepository => ({
     }
   },
 
-  deleteAsset: async (db, asset) => {
-    try {
-      const itemID = asset.itemID;
-      const assetID = asset.assetID;
-
-      const isItemIDExist = await db
-        .select()
-        .from(assetsToItems)
-        .leftJoin(items, eq(items.id, assetsToItems.itemID))
-        .where(eq(items.id, assetsToItems.itemID))
-        .limit(1);
-
-      if (isItemIDExist.length === 0) {
-        throw new AppErr(HttpStatus.NOT_FOUND, "ITEM_NOT_FOUND");
-      }
-
-      const isAssetIDExist = await db
-        .select({ id: assets.id })
-        .from(assets)
-        .leftJoin(assetsToItems, eq(assetsToItems.assetID, assets.id))
-        .where(
-          and(eq(assetsToItems.itemID, itemID), ilike(assets.assetID, assetID)),
+  hasReserveTransactions: async (db, assetId) => {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(transactions)
+      .where(
+        and(
+          eq(transactions.assetID, assetId),
+          eq(transactions.status, "RESERVE")
         )
-        .limit(1);
+      );
+    return result[0].count > 0;
+  },
 
-      if (isAssetIDExist.length === 0) {
-        throw new AppErr(HttpStatus.NOT_FOUND, "ASSET_NOT_FOUND");
-      }
+  deleteAsset: async (db, asset) => {
+    const id = asset.id;
 
-      await db
-        .delete(assetsToItems)
-        .where(
-          and(
-            eq(assetsToItems.itemID, itemID),
-            eq(assetsToItems.assetID, isAssetIDExist[0].id),
-          ),
-        );
+    const isAssetExist = await db
+      .select({ id: assets.id })
+      .from(assets)
+      .where(and(eq(assets.id, id), isNull(assets.deletedAt)))
+      .limit(1);
 
-      const isStillleft = await db
-        .select()
-        .from(assetsToItems)
-        .where(eq(assetsToItems.assetID, isAssetIDExist[0].id))
-        .limit(1);
-      if (isStillleft.length === 0) {
-        await db.delete(assets).where(eq(assets.id, isAssetIDExist[0].id));
-      }
-    } catch (err) {
-      throw err;
+    if (isAssetExist.length === 0) {
+      throw new AppErr(HttpStatus.NOT_FOUND, "ASSET_NOT_FOUND");
     }
+
+    await db
+      .update(assets)
+      .set({ deletedAt: new Date() })
+      .where(eq(assets.id, id));
   },
 });
 

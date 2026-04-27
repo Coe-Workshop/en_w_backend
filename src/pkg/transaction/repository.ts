@@ -1,9 +1,8 @@
-import { and, asc, desc, eq, gt, gte, ilike, inArray, lt, ne, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, gte, inArray, isNull, lt, ne, sql } from "drizzle-orm";
 import { DatabaseError } from "pg";
 import { DrizzleQueryError } from "drizzle-orm/errors";
 import HttpStatus from "http-status";
 import {
-  AdminTransactions,
   assets,
   AssetsStatus,
   assetsToItems,
@@ -139,7 +138,7 @@ export const makeTransactionRepository = (): TransactionRepository => ({
       .leftJoin(assetsToItems, eq(assetsToItems.itemID, items.id))
       .leftJoin(assets, eq(assets.id, assetsToItems.assetID))
       .leftJoin(categories, eq(items.categoryID, categories.id))
-      .where(eq(items.id, reqData.itemId))
+      .where(and(eq(items.id, reqData.itemId), isNull(assets.deletedAt)))
       .groupBy(items.name, items.description, categories.name, items.imageUrl);
     return result;
   },
@@ -172,6 +171,7 @@ export const makeTransactionRepository = (): TransactionRepository => ({
             asset: {
               columns: {
                 assetID: true,
+                deletedAt: true,
               },
               with: {
                 transactions: {

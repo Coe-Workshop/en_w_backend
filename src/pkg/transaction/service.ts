@@ -26,7 +26,13 @@ export const makeTransactionService = (
 
   getReservedByItem: async (req) => {
     return await db.transaction(async (tx) => {
-      return await transactionRepository.getReservedByItem(tx, req);
+      const result = await transactionRepository.getReservedByItem(tx, req);
+      return result.map((item) => ({
+        ...item,
+        assetsToItems: item.assetsToItems?.filter(
+          (ait: { asset?: { deletedAt?: Date | null } }) => !ait.asset?.deletedAt
+        ),
+      }));
     });
   },
 

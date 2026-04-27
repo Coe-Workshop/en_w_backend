@@ -1,4 +1,4 @@
-import { and, eq, gte, lt, sql, ilike, ne } from "drizzle-orm";
+import { and, eq, gte, lt, sql, ilike, ne, isNull } from "drizzle-orm";
 import { DatabaseError } from "pg";
 import { DrizzleQueryError } from "drizzle-orm/errors";
 import HttpStatus from "http-status";
@@ -74,7 +74,7 @@ export const makeItemRepository = (): ItemRepository => ({
           gte(transactions.endedAt, right_now),
         ),
       )
-      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .where(and(...conditions, isNull(assets.deletedAt)))
       .groupBy(items.id, categories.id)
       .orderBy(items.id);
     return result;
@@ -92,7 +92,7 @@ export const makeItemRepository = (): ItemRepository => ({
         imageUrl: items.imageUrl,
       })
       .from(items)
-      .where(eq(sql.identifier(`items"."${column}`), value))
+      .where(and(eq(sql.identifier(`items"."${column}`), value), isNull(assets.deletedAt)))
       .leftJoin(categories, eq(items.categoryID, categories.id))
       .leftJoin(assetsToItems, eq(assetsToItems.itemID, items.id))
       .leftJoin(assets, eq(assets.id, assetsToItems.assetID))

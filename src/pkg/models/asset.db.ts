@@ -1,4 +1,4 @@
-import { integer, pgTable, serial, text } from "drizzle-orm/pg-core";
+import { integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { items } from "./item.db";
 import { transactions } from "./transaction.db";
@@ -18,13 +18,13 @@ export interface NewAsset {
 }
 
 export interface delAsset {
-  itemID: number;
-  assetID: string;
+  id: number;
 }
 
 export const assets = pgTable("assets", {
   id: serial("id").primaryKey(),
   assetID: text("asset_id").notNull().unique(),
+  deletedAt: timestamp("deleted_at", { mode: "date" }),
 });
 
 export const assetsToItems = pgTable("assets_to_items", {

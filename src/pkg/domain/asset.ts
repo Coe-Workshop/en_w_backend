@@ -14,5 +14,6 @@ export interface AssetService {
 export interface AssetRepository {
   createAsset: (db: DBTransaction, Asset: NewAsset) => Promise<Asset>;
   getAllAssets: (db: DBTransaction) => Promise<Asset[]>;
-  deleteAsset: (db: DBTransaction, Asset: delAsset) => Promise<void>;
+  deleteAsset: (db: DBTransaction, asset: delAsset) => Promise<void>;
+  hasReserveTransactions: (db: DBTransaction, assetId: number) => Promise<boolean>;
 }

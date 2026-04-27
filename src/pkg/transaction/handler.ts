@@ -387,7 +387,6 @@ const transactionHandler = (transactionService: TransactionService) => ({
         ...req.body,
         transactionId: req.params.id,
         approverID: res.locals.id,
-        // approverID: "427bf6e9-00c5-40d6-8af4-d0b603c468be",
       };
       const reqData: UpdateTransactionByIdRequest =
         UpdateTransactionByIdRequest.parse(rawData);

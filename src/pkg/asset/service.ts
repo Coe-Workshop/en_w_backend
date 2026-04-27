@@ -1,5 +1,7 @@
 import { DB } from "@/config/drizzle";
+import HttpStatus from "http-status";
 import { AssetRepository, AssetService } from "../domain/asset";
+import { AppErr } from "@/utils/appErr";
 
 export const makeAssetService = (
   db: DB,
@@ -19,6 +21,10 @@ export const makeAssetService = (
 
   deleteAsset: async (reqData) => {
     return await db.transaction(async (tx) => {
+      const hasPendingTransactions = await assetRepository.hasReserveTransactions(tx, reqData.id);
+      if (hasPendingTransactions) {
+        throw new AppErr(HttpStatus.CONFLICT, "ASSET_HAS_PENDING_TRANSACTIONS");
+      }
       await assetRepository.deleteAsset(tx, reqData);
     });
   },
