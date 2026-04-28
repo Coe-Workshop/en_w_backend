@@ -1,4 +1,4 @@
-import { integer, pgTable, serial, text } from "drizzle-orm/pg-core";
+import { integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { pgEnum } from "drizzle-orm/pg-core";
 import { assets, assetsToItems } from "./asset.db";
@@ -30,6 +30,7 @@ export const items = pgTable("items", {
     .notNull()
     .references(() => categories.id),
   imageUrl: text("image_url"),
+  deletedAt: timestamp("deleted_at", { mode: "date" }),
 });
 
 //one item has one category

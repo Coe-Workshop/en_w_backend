@@ -245,6 +245,16 @@ export const itemHandler = (itemService: ItemService) => ({
         }
 
         if (
+          err.code === HttpStatus.CONFLICT &&
+          err.message === "ITEM_HAS_PENDING_TRANSACTIONS"
+        ) {
+          return res.status(err.code).json({
+            success: false,
+            error: "ไม่สามารถลบอุปกรณ์ได้เนื่องจากมีการจองที่ยังดำเนินการอยู่",
+          });
+        }
+
+        if (
           err.code === HttpStatus.NOT_FOUND &&
           err.message === "RECORD_NOT_FOUND"
         ) {

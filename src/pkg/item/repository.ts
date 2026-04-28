@@ -37,7 +37,7 @@ export const makeItemRepository = (): ItemRepository => ({
 
   getItems: async (db, filter?: ItemFilter) => {
     const right_now = sql`now()`;
-    const conditions: any[] = [];
+    const conditions: any[] = [isNull(items.deletedAt)];
 
     if (filter?.category) {
       conditions.push(eq(categories.name, filter.category));
@@ -77,7 +77,7 @@ export const makeItemRepository = (): ItemRepository => ({
           gte(transactions.endedAt, right_now),
         ),
       )
-      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .where(and(...conditions))
       .groupBy(items.id, categories.id)
       .orderBy(items.id);
     return result;
@@ -101,7 +101,7 @@ export const makeItemRepository = (): ItemRepository => ({
         assets,
         and(eq(assets.id, assetsToItems.assetID), isNull(assets.deletedAt)),
       )
-      .where(eq(sql.identifier(`items"."${column}`), value))
+      .where(and(eq(sql.identifier(`items"."${column}`), value), isNull(items.deletedAt)))
       .groupBy(items.id, categories.name);
 
     if (result.length === 0) {
@@ -120,23 +120,48 @@ export const makeItemRepository = (): ItemRepository => ({
     return result[0];
   },
 
-  deleteItemByID: async (db, id) => {
-    try {
-      const result = await db.delete(items).where(eq(items.id, id)).returning();
+  hasLinkedAssets: async (db, itemId) => {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(assetsToItems)
+      .leftJoin(assets, eq(assets.id, assetsToItems.assetID))
+      .where(
+        and(
+          eq(assetsToItems.itemID, itemId),
+          isNull(assets.deletedAt)
+        )
+      );
+    return result[0].count > 0;
+  },
 
-      if (result.length === 0) {
-        throw new AppErr(HttpStatus.NOT_FOUND, "RECORD_NOT_FOUND");
-      }
-    } catch (err) {
-      if (
-        err instanceof DrizzleQueryError &&
-        err.cause instanceof DatabaseError &&
-        err.cause.code === "23503"
-      ) {
-        throw new AppErr(HttpStatus.CONFLICT, "ITEM_HAS_LINKED_ASSETS");
-      }
-      throw err;
+  hasReserveTransactions: async (db, itemId) => {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(transactions)
+      .where(
+        and(
+          eq(transactions.itemID, itemId),
+          eq(transactions.status, "RESERVE")
+        )
+      );
+    return result[0].count > 0;
+  },
+
+  deleteItemByID: async (db, id) => {
+    const existingItem = await db
+      .select({ id: items.id })
+      .from(items)
+      .where(and(eq(items.id, id), isNull(items.deletedAt)))
+      .limit(1);
+
+    if (existingItem.length === 0) {
+      throw new AppErr(HttpStatus.NOT_FOUND, "RECORD_NOT_FOUND");
     }
+
+    await db
+      .update(items)
+      .set({ deletedAt: new Date() })
+      .where(eq(items.id, id));
   },
 
   updateItem: async (db, id, updates) => {

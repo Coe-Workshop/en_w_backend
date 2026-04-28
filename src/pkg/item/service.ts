@@ -1,6 +1,8 @@
 import { DB } from "@/config/drizzle";
+import HttpStatus from "http-status";
 import { ItemCategory } from "../models";
 import { ItemRepository, ItemService, ItemFilter } from "../domain/item";
+import { AppErr } from "@/utils/appErr";
 
 export const makeItemService = (
   db: DB,
@@ -36,6 +38,14 @@ export const makeItemService = (
 
   deleteItemByID: async (id) => {
     await db.transaction(async (tx) => {
+      const hasAssets = await itemRepository.hasLinkedAssets(tx, id);
+      if (hasAssets) {
+        throw new AppErr(HttpStatus.CONFLICT, "ITEM_HAS_LINKED_ASSETS");
+      }
+      const hasPendingTransactions = await itemRepository.hasReserveTransactions(tx, id);
+      if (hasPendingTransactions) {
+        throw new AppErr(HttpStatus.CONFLICT, "ITEM_HAS_PENDING_TRANSACTIONS");
+      }
       await itemRepository.deleteItemByID(tx, id);
     });
   },

@@ -37,4 +37,6 @@ export interface ItemRepository {
     id: number,
     updates: Partial<NewItem>,
   ) => Promise<Item>;
+  hasLinkedAssets: (db: DBTransaction, itemId: number) => Promise<boolean>;
+  hasReserveTransactions: (db: DBTransaction, itemId: number) => Promise<boolean>;
 }
