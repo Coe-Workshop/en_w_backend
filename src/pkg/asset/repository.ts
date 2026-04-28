@@ -36,6 +36,7 @@ export const makeAssetRepository = (): AssetRepository => ({
           and(
             inArray(assets.assetID, reqData.assetID as string[]),
             eq(assetsToItems.itemID, reqData.itemID),
+            isNull(assets.deletedAt),
           ),
         );
       if (isAlreadyExist.length > 0) {
@@ -53,7 +54,7 @@ export const makeAssetRepository = (): AssetRepository => ({
         .values(assetsWithKey)
         .onConflictDoUpdate({
           target: assets.assetID,
-          set: { assetID: assets.assetID },
+          set: { deletedAt: null },
         })
         .returning({ id: assets.id });
 
@@ -66,7 +67,7 @@ export const makeAssetRepository = (): AssetRepository => ({
         };
       });
 
-      await db.insert(assetsToItems).values(junctionData);
+      await db.insert(assetsToItems).values(junctionData).onConflictDoNothing();
 
       const getItemName = await db
         .select({ name: items.name })

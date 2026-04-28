@@ -14,8 +14,30 @@ import { AppErr } from "@/utils/appErr";
 
 export const makeItemRepository = (): ItemRepository => ({
   createItem: async (db, item) => {
+    const existingActiveItem = await db
+      .select({ id: items.id })
+      .from(items)
+      .where(and(eq(items.name, item.name), isNull(items.deletedAt)))
+      .limit(1);
+
+    if (existingActiveItem.length > 0) {
+      throw new AppErr(HttpStatus.CONFLICT, "ITEM_NAME_ALREADY_EXIST");
+    }
+
     try {
-      const result = await db.insert(items).values(item).returning();
+      const result = await db
+        .insert(items)
+        .values(item)
+        .onConflictDoUpdate({
+          target: items.name,
+          set: { 
+            deletedAt: null,
+            description: item.description,
+            categoryID: item.categoryID,
+            imageUrl: item.imageUrl,
+          },
+        })
+        .returning();
 
       if (!Array.isArray(result)) {
         throw new AppErr(HttpStatus.INTERNAL_SERVER_ERROR, "ERROR_INSERT_DATA");
@@ -23,14 +45,6 @@ export const makeItemRepository = (): ItemRepository => ({
 
       return result[0];
     } catch (err) {
-      if (
-        err instanceof DrizzleQueryError &&
-        err.cause instanceof DatabaseError &&
-        err.cause.code === "23505" &&
-        err.cause.message.includes("name")
-      ) {
-        throw new AppErr(HttpStatus.CONFLICT, "ITEM_NAME_ALREADY_EXIST");
-      }
       throw err;
     }
   },

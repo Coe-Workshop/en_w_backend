@@ -154,18 +154,26 @@ export const makeTransactionRepository = (): TransactionRepository => ({
       throw new AppErr(HttpStatus.NOT_FOUND, "ITEM_NOT_FOUND");
     }
 
-    // Thailand local time: 08:00-17:00 = 01:00-10:00 UTC (Bangkok is UTC+7)
-    const startOfDay = new Date(reqData.date);
-    const endOfDay = new Date(reqData.date)
-    startOfDay.setUTCHours(1, 0, 0, 0);
-    endOfDay.setUTCHours(10, 0, 0, 0);
+    const transactionConditions = [ne(transactions.status, "REJECT")];
+
+    if (reqData.date) {
+      // Thailand local time: 08:00-17:00 = 01:00-10:00 UTC (Bangkok is UTC+7)
+      const startOfDay = new Date(reqData.date);
+      const endOfDay = new Date(reqData.date);
+      startOfDay.setUTCHours(1, 0, 0, 0);
+      endOfDay.setUTCHours(10, 0, 0, 0);
+      transactionConditions.push(gte(transactions.startedAt, startOfDay));
+      transactionConditions.push(lt(transactions.startedAt, endOfDay));
+    } else {
+      transactionConditions.push(gte(transactions.startedAt, new Date()));
+    }
 
     const result = await db.query.items.findMany({
       where: eq(items.id, reqData.itemId),
       with: {
         category: {
           columns: {
-	    id: true,
+      	id: true,
             name: true,
           },
         },
@@ -178,9 +186,7 @@ export const makeTransactionRepository = (): TransactionRepository => ({
               },
               with: {
                 transactions: {
-                  where: and(gte(transactions.startedAt, startOfDay),
-                    lt(transactions.startedAt, endOfDay),
-                    ne(transactions.status, "REJECT")),
+                  where: and(...transactionConditions),
                   orderBy: [desc(transactions.startedAt)],
                   limit: 10,
                   columns: {
@@ -205,7 +211,7 @@ export const makeTransactionRepository = (): TransactionRepository => ({
                       columns: {
                         detail: true,
                       },
-                      limit: 1, // Matches the original's single message per transaction
+                      limit: 1,
                     },
                   },
                 },

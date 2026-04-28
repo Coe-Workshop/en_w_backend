@@ -40,9 +40,9 @@ const assetHandler = (assetService: AssetService) => ({
       const err = error as Error;
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false,
-        message:
+        error:
           "ไม่สามารถเข้าถึงเลขครุภัรฑ์ทั้งหมดได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
-        error: err.message,
+        message: err.message,
       });
     }
   },
@@ -94,8 +94,8 @@ const assetHandler = (assetService: AssetService) => ({
       }
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false,
-        message: "ไม่สามารถเพิ่มเลขครุภัณฑ์ได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
-        error: error.message,
+        error: "ไม่สามารถเพิ่มเลขครุภัณฑ์ได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
+        message: error.message,
       });
     }
   },
@@ -138,8 +138,8 @@ const assetHandler = (assetService: AssetService) => ({
       }
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         success: false,
-        message: "ไม่สามารถลบเลขครุภัณฑ์ได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
-        error: error.message,
+        error: "ไม่สามารถลบเลขครุภัณฑ์ได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
+        message: error.message,
       });
     }
   },

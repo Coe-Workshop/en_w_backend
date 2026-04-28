@@ -21,7 +21,8 @@ export const GetReservedByItemRequest = z.object({
   date: z
     .string("กรุณาเลือกวันที่จอง")
     .trim()
-    .regex(/^\d{4}-\d{2}-\d{2}$/, "รูปแบบวันที่ไม่ถูกต้อง (YYYY-MM-DD)"),
+    .regex(/^\d{4}-\d{2}-\d{2}$/, "รูปแบบวันที่ไม่ถูกต้อง (YYYY-MM-DD)")
+    .optional(),
 });
 
 export const GetAllTransactionsByUserRequest = z.object({

@@ -1,4 +1,4 @@
-import { integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { integer, pgTable, primaryKey, serial, text, timestamp } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { items } from "./item.db";
 import { transactions } from "./transaction.db";
@@ -34,7 +34,9 @@ export const assetsToItems = pgTable("assets_to_items", {
   itemID: integer("item_id")
     .notNull()
     .references(() => items.id),
-});
+}, (table) => ({
+  pk: primaryKey({ columns: [table.assetID, table.itemID] }),
+}));
 
 export const assetsToItemsRelations = relations(assetsToItems, ({ one }) => ({
   asset: one(assets, {
