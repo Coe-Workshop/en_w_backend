@@ -13,7 +13,7 @@ const makeServer = () => {
 
   const corsWhitelist = new Set([
     'https://dev-coe.ionize13.com',
-    'https://coe.ionize13.com',
+    'https://en-workshop.com',
     'http://localhost:3000',
   ]);
 
