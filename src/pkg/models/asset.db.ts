@@ -1,4 +1,4 @@
-import { integer, pgTable, primaryKey, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { integer, pgTable, primaryKey, serial, text, timestamp, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { items } from "./item.db";
 import { transactions } from "./transaction.db";
@@ -25,7 +25,10 @@ export const assets = pgTable("assets", {
   id: serial("id").primaryKey(),
   assetID: text("asset_id").notNull().unique(),
   deletedAt: timestamp("deleted_at", { mode: "date" }),
-});
+},
+(table) => [
+  index("idx_assets_deleted_at").on(table.deletedAt),
+]);
 
 export const assetsToItems = pgTable("assets_to_items", {
   assetID: integer("asset_id")
@@ -34,9 +37,11 @@ export const assetsToItems = pgTable("assets_to_items", {
   itemID: integer("item_id")
     .notNull()
     .references(() => items.id),
-}, (table) => ({
-  pk: primaryKey({ columns: [table.assetID, table.itemID] }),
-}));
+}, (table) => [
+  primaryKey({ columns: [table.assetID, table.itemID] }),
+  index("idx_assets_to_items_item_id").on(table.itemID),
+  index("idx_assets_to_items_asset_id").on(table.assetID),
+]);
 
 export const assetsToItemsRelations = relations(assetsToItems, ({ one }) => ({
   asset: one(assets, {

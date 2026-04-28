@@ -43,6 +43,9 @@ export const users = pgTable(
   (table) => [
     uniqueIndex("idx_users_email").using("btree", sql`LOWER(${table.email})`),
     index("idx_trgm_email").using("gin", sql`${table.email} gin_trgm_ops`),
+    index("idx_trgm_user_full_name").using("gin", sql`(${table.firstName} || ' ' || ${table.lastName}) gin_trgm_ops`),
+    index("idx_users_role").on(table.role),
+    index("idx_users_deleted_at").on(table.deletedAt),
   ],
 );
 

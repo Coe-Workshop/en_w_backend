@@ -1,7 +1,8 @@
-import { integer, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { integer, pgTable, serial, text, timestamp, index } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { pgEnum } from "drizzle-orm/pg-core";
-import { assets, assetsToItems } from "./asset.db";
+import { sql } from "drizzle-orm";
+import { assetsToItems } from "./asset.db";
 import { customType } from "drizzle-orm/pg-core";
 
 export interface Item {
@@ -31,7 +32,12 @@ export const items = pgTable("items", {
     .references(() => categories.id),
   imageUrl: text("image_url"),
   deletedAt: timestamp("deleted_at", { mode: "date" }),
-});
+},
+(table) => [
+  index("idx_trgm_item_name").using("gin", sql`${table.name} gin_trgm_ops`),
+  index("idx_items_category_id").on(table.categoryID),
+  index("idx_items_deleted_at").on(table.deletedAt),
+]);
 
 //one item has one category
 //one ITEM has many assets

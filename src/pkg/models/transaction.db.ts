@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   integer,
   pgEnum,
@@ -6,6 +6,7 @@ import {
   serial,
   timestamp,
   uuid,
+  index,
 } from "drizzle-orm/pg-core";
 import { users } from "./user.db";
 import { messages } from "./message.db";
@@ -148,7 +149,19 @@ export const transactions = pgTable("transactions", {
     mode: "date",
     withTimezone: false,
   }).notNull(),
-});
+},
+  (table) => [
+    index("idx_transactions_reserver_id").on(table.reserverID),
+    index("idx_transactions_item_id").on(table.itemID),
+    index("idx_transactions_asset_id").on(table.assetID),
+    index("idx_transactions_approver_id").on(table.approverID),
+    index("idx_transactions_status").on(table.status),
+    index("idx_transactions_started_at").on(table.startedAt),
+    index("idx_transactions_ended_at").on(table.endedAt),
+    index("idx_transactions_reserver_status").on(table.reserverID, table.status),
+    index("idx_transactions_item_status").on(table.itemID, table.status),
+    index("idx_transactions_status_started").on(table.status, table.startedAt),
+  ]);
 
 /*
    one transaction belong to one reserver, approver, asset_id
