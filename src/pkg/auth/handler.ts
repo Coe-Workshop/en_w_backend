@@ -39,8 +39,8 @@ const authHandler = (authService: AuthService) => ({
     if (!result.success) {
       return res.status(HttpStatus.FORBIDDEN).json({
         success: false,
-        message: "คำขอไม่ถูกต้อง",
-        error: result.error
+        error: "คำขอไม่ถูกต้อง",
+        message: result.error,
       });
     }
     const isRegistered = await authService.isRegistered(result.data.email);
@@ -87,21 +87,21 @@ const authHandler = (authService: AuthService) => ({
             err.message === "RECORD_NOT_FOUND") {
             return res.status(err.code).json({
               success: false,
-              message: "อีเมล หรือ รหัสผ่าน ไม่ถูกต้อง",
+              error: "อีเมล หรือ รหัสผ่าน ไม่ถูกต้อง",
             });
           }
           if (err.code === HttpStatus.UNAUTHORIZED &&
             err.message == "USER_DOES_NOT_HAVE_CREDENTIALS") {
             return res.status(err.code).json({
               success: false,
-              message: "อีเมล หรือ รหัสผ่าน ไม่ถูกต้อง"
+              error: "อีเมล หรือ รหัสผ่าน ไม่ถูกต้อง"
             })
           }
           if (err.code === HttpStatus.UNAUTHORIZED &&
             err.message == "INVALID_CREDENTIALS") {
             return res.status(err.code).json({
               success: false,
-              message: "อีเมล หรือ รหัสผ่าน ไม่ถูกต้อง"
+              error: "อีเมล หรือ รหัสผ่าน ไม่ถูกต้อง"
             })
           }
         }
@@ -109,9 +109,9 @@ const authHandler = (authService: AuthService) => ({
         const er = err as Error;
         return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
           success: false,
-          message:
+          error:
             "ไม่สามารถเข้าสู่ระบบได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
-          error: er.message,
+          message: er.message,
         });
       }
 
@@ -119,9 +119,9 @@ const authHandler = (authService: AuthService) => ({
         if (err) {
           return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
             success: false,
-            message:
+            error:
               "เข้าสู่ระบบไม่สำเร็จ ",
-            error: err.message,
+            message: err.message,
           });
         }
 
@@ -162,9 +162,9 @@ const authHandler = (authService: AuthService) => ({
         if (err) {
           return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
             success: false,
-            message:
+            error:
               "ไม่สามารถสร้างผู้ใช้ได้ในขณะนี้ กรุณาติดต่อผู้ดูแลระบบ",
-            error: err.message,
+            message: err.message,
           });
         }
 

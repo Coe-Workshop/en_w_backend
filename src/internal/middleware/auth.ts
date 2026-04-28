@@ -15,15 +15,15 @@ const makeMiddleware = (): MiddlewareResources => ({
       if (!result.success) {
         return res.status(HttpStatus.FORBIDDEN).json({
           success: false,
-          message: "ไม่มีสิทธิ์เข้าถึงข้อมูล",
-          error: result.error,
+          error: "ไม่มีสิทธิ์เข้าถึงข้อมูล",
+          message: result.error,
         });
       }
 
       if (result.data.role !== validRole) {
         return res.status(HttpStatus.FORBIDDEN).json({
           success: false,
-          message: "ไม่มีสิทธิ์เข้าถึงข้อมูล",
+          error: "ไม่มีสิทธิ์เข้าถึงข้อมูล",
         });
       }
 
@@ -39,8 +39,8 @@ const makeMiddleware = (): MiddlewareResources => ({
       if (!result.success) {
         return res.status(HttpStatus.FORBIDDEN).json({
           success: false,
-          message: "คำขอไม่ถูกต้อง",
-          error: result.error,
+          error: "คำขอไม่ถูกต้อง",
+          message: result.error,
         });
       }
       res.locals.role = result.data.role;
